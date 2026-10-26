@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeteoFocus Terminal Dashboard</title>
+<!-- React & Tailwind CSS Frameworks loaded directly via CDN -->
+<script src="https://unpkg.com" crossorigin></script>
+<script src="https://unpkg.com" crossorigin></script>
+<script src="https://unpkg.com"></script>
+<script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0f19] text-[#00ff66] font-mono min-h-screen p-6">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function MeteoFocusTerminal() {
+// Because you have no server backend setup yet, this runs on built-in mock live trading data
+const [marketSnapshot, setMarketSnapshot] = useState({
+"ERCOT_TEXAS_GRID": { model: "ECMWF", run_id: "20261026_12Z", projected_dd: 54.5, prev_dd: 40.0 },
+"PJM_NORTHEAST_GRID": { model: "GFS", run_id: "20261026_12Z", projected_dd: 12.2, prev_dd: 11.8 },
+"MIDWEST_CROP_BELT": { model: "EURO_ENS", run_id: "20261026_12Z", projected_dd: 28.4, prev_dd: 31.2 }
+});
+const [alertLogs, setAlertLogs] = useState([]);
+
+// This simulates live incoming NOAA models changing their predictions every 5 seconds
+useEffect(() => {
+const interval = setInterval(() => {
+const regions = Object.keys(marketSnapshot);
+const randomRegion = regions[Math.floor(Math.random() * regions.length)];
+const targetRegion = marketSnapshot[randomRegion];
+
+// Generate a simulated random weather model drift shift
+const oldVal = targetRegion.projected_dd;
+const shift = (Math.random() * 12 - 6);
+const newVal = Math.max(0, oldVal + shift);
+
+if (Math.abs(shift) >= 2.0) {
+const newLog = {
+event_id: "evt_" + Math.random().toString(36).substr(2, 9),
+region_id: randomRegion,
+model_name: targetRegion.model,
+net_shift: roundValue(shift),
+priority: Math.abs(shift) >= 4.5 ? "HIGH" : "MEDIUM"
+};
+setAlertLogs(prev => [newLog, ...prev.slice(0, 15)]);
+}
+
+setMarketSnapshot(prev => ({
+...prev,
+[randomRegion]: {
+...prev[randomRegion],
+projected_dd: roundValue(newVal),
+prev_dd: roundValue(oldVal)
+}
+}));
+}, 5000);
+
+return () => clearInterval(interval);
+}, [marketSnapshot]);
+
+const roundValue = (val) => Math.round(val * 10) / 10;
+
+return (
+<div class="max-w-6xl mx-auto">
+{/* TERMINAL CONTROL MODULE HEADER */}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-slate-800 pb-4 mb-6">
+<div>
+<h1 class="text-xl font-bold tracking-wider text-white">METEOFOCUS // ASSET_INTELLIGENCE_TERMINAL</h1>
+<p class="text-xs text-slate-500 mt-1">Institutional Commodity Weather Analytics & Alpha Scoring Engine</p>
+</div>
+<div class="mt-2 sm:mt-0 px-3 py-1 bg-slate-800 text-xs rounded border border-slate-700 animate-pulse text-[#00ff66]">
+LIVE SIMULATION ACTIVE
+</div>
+</div>
+
+{/* REGIONAL MATRIX TILES LAYER */}
+<h2 class="text-slate-400 text-xs uppercase tracking-widest mb-4">Active Hub Asset Projections</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+{Object.entries(marketSnapshot).map(([region, data]) => {
+const delta = roundValue(data.projected_dd - data.prev_dd);
+return (
+<div key={region} class="bg-[#111827] border border-slate-800 p-5 rounded-lg transition-all duration-300 hover:border-slate-700">
+<div class="text-[10px] text-slate-500">RUN: {data.run_id} | PLATFORM: {data.model}</div>
+<div class="text-base font-bold my-1 text-slate-200">{region.replace(/_/g, " ")}</div>
+
+<div class="flex justify-between items-end mt-4">
+<div>
+<div class="text-[10px] text-slate-500">PROJECTED DEGREE DAYS</div>
+<div class="text-3xl text-white font-bold tracking-tight">{data.projected_dd.toFixed(1)}</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-slate-500">6HR GRID SHIFT</div>
+<div class={`text-xl font-bold ${delta >= 2 ? 'text-emerald-400' : delta <= -2 ? 'text-rose-400' : 'text-slate-400'}`}>
+{delta >= 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1)}
+</div>
+</div>
+</div>
+</div>
+);
+})}
+</div>
+
+{/* LIVE MODEL FLIP ALERT TICKER */}
+<h2 class="text-slate-400 text-xs uppercase tracking-widest mb-4">Real-Time Signal Execution Logs (Auto-Scraping NOAA Data)</h2>
+<div class="bg-[#111827] border border-slate-800 rounded-lg p-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+{alertLogs.length === 0 ? (
+<div class="text-slate-600 text-xs text-center py-8">Awaiting initial structural mathematical adjustments from global weather model matrices...</div>
+) : (
+<div class="divide-y divide-slate-800">
+{alertLogs.map((log) => (
+<div key={log.event_id} class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 text-xs gap-2">
+<div>
+<span class={`mr-2 font-bold px-1.5 py-0.5 rounded text-[10px] ${log.priority === 'HIGH' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
+{log.priority} FLIP
+</span>
+<span class="text-slate-200 font-bold">{log.region_id.replace(/_/g, " ")}</span>
+<span class="text-slate-400"> runs updated. Shift vector identified at </span>
+<span class={`font-bold ${log.net_shift > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+{log.net_shift > 0 ? `+${log.net_shift}` : log.net_shift} DD
+</span>
+</div>
+<div class="text-slate-600 text-[10px]">{new Date().toLocaleTimeString()}</div>
+</div>
+))}
+</div>
+)}
+</div>
+</div>
+);
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MeteoFocusTerminal />);
+</script>
+</body>
+</html>
