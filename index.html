@@ -398,10 +398,52 @@ function addLog(region, model, shift) {
     }
 }
 
+function runAutomatedUpdate() {
+
+    const regions = Object.keys(hubs);
+
+    const randomRegion =
+        regions[Math.floor(Math.random() * regions.length)];
+
+    const hub = hubs[randomRegion];
+
+    hub.prev_dd = hub.projected_dd;
+
+    const shift =
+        Math.round((Math.random() * 6 - 3) * 10) / 10;
+
+    hub.projected_dd =
+        Math.max(
+            0,
+            Math.round((hub.projected_dd + shift) * 10) / 10
+        );
+
+    hub.current_temp =
+        Math.round(
+            (hub.current_temp + (Math.random() * 2 - 1)) * 10
+        ) / 10;
+
+    if (Math.abs(shift) >= 0.2) {
+        addLog(randomRegion, hub.model, shift);
+    }
+
+    renderTiles();
+
+    const card =
+        document.getElementById(`card-${randomRegion}`);
+
+    if (card) {
+        card.classList.add("updated");
+
+        setTimeout(() => {
+            card.classList.remove("updated");
+        }, 750);
+    }
+}
+
 renderTiles();
 
 setInterval(runAutomatedUpdate, 3000);
-
     const regions = Object.keys(hubs);
 
     const randomRegion =
