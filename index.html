@@ -168,7 +168,7 @@ border-color: #00ff66;
 <p class="subtitle-text">MeteoFocus Institutional Alpha Engine // Automated NOAA Data Tracker</p>
 </div>
 <div style="display: flex; align-items: center; gap: 16px;">
-<a href="https://github.com/gtvegas11-png/metofocus/wiki" target="_blank" class="wiki-btn">
+<a href="https://github.com" target="_blank" class="wiki-btn">
 📚 VIEW WIKI DOCUMENTATION →
 </a>
 <div class="status-badge" id="conn-status">LIVE DATA STREAM ACTIVE</div>
@@ -196,7 +196,6 @@ const hubs = {
 
 function renderTiles() {
 const container = document.getElementById('grid-container');
-if(!container) return;
 container.innerHTML = '';
 
 Object.entries(hubs).forEach(([region, item]) => {
@@ -251,7 +250,6 @@ const emptyMsg = document.getElementById('empty-msg');
 if (emptyMsg) emptyMsg.style.display = 'none';
 
 const logList = document.getElementById('log-list');
-if(!logList) return;
 const priority = Math.abs(shift) >= 1.8 ? "HIGH" : "MEDIUM";
 const badgeClass = priority === 'HIGH' ? 'badge-high' : 'badge-med';
 const shiftClass = shift > 0 ? 'text-up' : 'text-down';
@@ -269,4 +267,6 @@ const logHTML = `
 <div style="color: #475569; font-size: 10px;">${time}</div>
 </div>
 `;
+logList.insertAdjacentHTML('afterbegin', logHTML);
+}
 
