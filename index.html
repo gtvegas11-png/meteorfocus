@@ -28,4 +28,424 @@ body {
     margin-bottom: 24px;
 }
 
-.title-text
+.title-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.subtitle-text {
+    font-size: 12px;
+    color: #55657e;
+    margin: 4px 0 0 0;
+}
+
+.status-badge {
+    background-color: #1e293b;
+    padding: 6px 12px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid #334155;
+    animation: pulse 2s infinite;
+}
+
+.section-label {
+    color: #94a3b8;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.tile-card {
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    padding: 20px;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+}
+
+.tile-card.updated {
+    border-color: #00ff66;
+}
+
+.tile-meta {
+    font-size: 10px;
+    color: #475569;
+}
+
+.tile-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f1f5f9;
+    margin: 4px 0;
+}
+
+.tile-subdata {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.flex-row-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 16px;
+}
+
+.big-metric {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 10px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.delta-val {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.text-up {
+    color: #34d399;
+}
+
+.text-down {
+    color: #f87171;
+}
+
+.text-neutral {
+    color: #94a3b8;
+}
+
+.log-box {
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 16px;
+    height: 250px;
+    overflow-y: auto;
+}
+
+.empty-msg {
+    color: #475569;
+    font-size: 12px;
+    text-align: center;
+    padding: 40px 0;
+}
+
+.log-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #1e293b;
+    font-size: 12px;
+}
+
+.badge-flip {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    margin-right: 8px;
+    border: 1px solid;
+}
+
+.badge-high {
+    background-color: #450a0a;
+    color: #f87171;
+    border-color: #991b1b;
+}
+
+.badge-med {
+    background-color: #451a03;
+    color: #fbbf24;
+    border-color: #9a3412;
+}
+
+.wiki-btn {
+    color: #00ff66;
+    text-decoration: none;
+    font-size: 11px;
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all .2s;
+}
+
+.wiki-btn:hover {
+    border-color: #00ff66;
+}
+
+@keyframes pulse {
+    0% {opacity:1;}
+    50% {opacity:.5;}
+    100% {opacity:1;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="max-container">
+
+    <div class="header-module">
+        <div>
+            <h1 class="title-text">AMER_COMMODITY_WEATHER_TERMINAL</h1>
+            <p class="subtitle-text">
+                MeteoFocus Institutional Alpha Engine // Automated NOAA Data Tracker
+            </p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;">
+
+            <a href="https://github.com"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="wiki-btn">
+                📚 VIEW WIKI DOCUMENTATION →
+            </a>
+
+            <div class="status-badge">
+                LIVE DATA STREAM ACTIVE
+            </div>
+
+        </div>
+    </div>
+
+    <h2 class="section-label">
+        Active Hub Asset Projections
+    </h2>
+
+    <div class="grid-layout" id="grid-container"></div>
+
+    <h2 class="section-label">
+        Real-Time Signal Execution Logs (Auto-Scraping NOAA Data)
+    </h2>
+
+    <div class="log-box">
+        <div class="empty-msg" id="empty-msg">
+            Awaiting operational model adjustments from target basins...
+        </div>
+
+        <div id="log-list"></div>
+    </div>
+
+</div>
+
+<script>
+
+const hubs = {
+    ERCOT_TEXAS_GRID: {
+        model: "ECMWF",
+        current_temp: 74.5,
+        projected_dd: 9.5,
+        prev_dd: 9.5
+    },
+
+    PJM_NORTHEAST_GRID: {
+        model: "GFS",
+        current_temp: 61.2,
+        projected_dd: 2.1,
+        prev_dd: 2.1
+    },
+
+    MIDWEST_CROP_BELT: {
+        model: "EURO_ENS",
+        current_temp: 56.8,
+        projected_dd: 4.8,
+        prev_dd: 4.8
+    }
+};
+
+function renderTiles() {
+
+    const container = document.getElementById("grid-container");
+    container.innerHTML = "";
+
+    Object.entries(hubs).forEach(([region,item]) => {
+
+        const delta =
+            Math.round((item.projected_dd - item.prev_dd) * 10) / 10;
+
+        const deltaClass =
+            delta > 0
+                ? "text-up"
+                : delta < 0
+                    ? "text-down"
+                    : "text-neutral";
+
+        const deltaText =
+            delta > 0
+                ? `+${delta.toFixed(1)}`
+                : delta.toFixed(1);
+
+        container.innerHTML += `
+        <div class="tile-card" id="card-${region}">
+            <div class="tile-meta">
+                LIVE METRICS // MODEL: ${item.model}
+            </div>
+
+            <div class="tile-title">
+                ${region.replace(/_/g," ")}
+            </div>
+
+            <div class="tile-subdata">
+                Hub Temperature: ${item.current_temp.toFixed(1)}°F
+            </div>
+
+            <div class="flex-row-box">
+                <div>
+                    <div class="metric-label">
+                        COOLING DEGREE DAYS
+                    </div>
+
+                    <div class="big-metric">
+                        ${item.projected_dd.toFixed(1)}
+                    </div>
+                </div>
+
+                <div style="text-align:right">
+                    <div class="metric-label">
+                        6HR RUN DRIFT
+                    </div>
+
+                    <div class="delta-val ${deltaClass}">
+                        ${deltaText}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        `;
+    });
+}
+
+function addLog(region, model, shift) {
+
+    document.getElementById("empty-msg").style.display = "none";
+
+    const logList = document.getElementById("log-list");
+
+    const priority =
+        Math.abs(shift) >= 1.8 ? "HIGH" : "MEDIUM";
+
+    const badgeClass =
+        priority === "HIGH"
+            ? "badge-high"
+            : "badge-med";
+
+    const shiftClass =
+        shift > 0
+            ? "text-up"
+            : "text-down";
+
+    const shiftDisplay =
+        shift > 0
+            ? `+${shift.toFixed(1)}`
+            : shift.toFixed(1);
+
+    const time =
+        new Date().toLocaleTimeString();
+
+    logList.insertAdjacentHTML("afterbegin", `
+        <div class="log-row">
+            <div>
+                <span class="badge-flip ${badgeClass}">
+                    ${priority} FLIP
+                </span>
+
+                <span style="color:#f1f5f9;font-weight:bold;">
+                    ${region.replace(/_/g," ")}
+                </span>
+
+                <span style="color:#94a3b8;">
+                    matrix adjustment processed:
+                </span>
+
+                <span class="delta-val ${shiftClass}"
+                      style="font-size:12px;">
+                    ${shiftDisplay} DD
+                </span>
+            </div>
+
+            <div style="color:#475569;font-size:10px;">
+                ${time}
+            </div>
+        </div>
+    `);
+
+    while (logList.children.length > 100) {
+        logList.removeChild(logList.lastChild);
+    }
+}
+
+function runAutomatedUpdate() {
+
+    const regions = Object.keys(hubs);
+
+    const randomRegion =
+        regions[Math.floor(Math.random() * regions.length)];
+
+    const hub = hubs[randomRegion];
+
+    hub.prev_dd = hub.projected_dd;
+
+    const shift =
+        Math.round((Math.random() * 6 - 3) * 10) / 10;
+
+    hub.projected_dd =
+        Math.max(
+            0,
+            Math.round((hub.projected_dd + shift) * 10) / 10
+        );
+
+    hub.current_temp =
+        Math.round(
+            (hub.current_temp + (Math.random() * 2 - 1)) * 10
+        ) / 10;
+
+    if (Math.abs(shift) >= 0.2) {
+        addLog(randomRegion, hub.model, shift);
+    }
+
+    renderTiles();
+
+    const card =
+        document.getElementById(`card-${randomRegion}`);
+
+    if (card) {
+        card.classList.add("updated");
+
+        setTimeout(() => {
+            card.classList.remove("updated");
+        }, 750);
+    }
+}
+
+renderTiles();
+
+setInterval(runAutomatedUpdate, 3000);
+
+</script>
+
+</body>
+</html>
