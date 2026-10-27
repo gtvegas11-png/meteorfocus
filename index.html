@@ -398,7 +398,9 @@ function addLog(region, model, shift) {
     }
 }
 
-function runAutomatedUpdate() {
+renderTiles();
+
+setInterval(runAutomatedUpdate, 3000);
 
     const regions = Object.keys(hubs);
 
