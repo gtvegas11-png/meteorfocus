@@ -138,6 +138,20 @@ border: 1px solid;
 }
 .badge-high { background-color: #450a0a; color: #f87171; border-color: #991b1b; }
 .badge-med { background-color: #451a03; color: #fbbf24; border-color: #9a3412; }
+.wiki-btn {
+color: #00ff66;
+text-decoration: none;
+font-size: 11px;
+background-color: #111827;
+border: 1px solid #1e293b;
+padding: 6px 12px;
+border-radius: 4px;
+font-weight: bold;
+transition: all 0.2s;
+}
+.wiki-btn:hover {
+border-color: #00ff66;
+}
 @keyframes pulse {
 0% { opacity: 1; }
 50% { opacity: 0.5; }
@@ -147,7 +161,6 @@ border: 1px solid;
 </head>
 <body>
 <div class="max-container">
-<!-- HEADER MODULE -->
 <!-- HEADER MODULE WITH INTEGRATED WIKI CHANNEL LINK -->
 <div class="header-module">
 <div>
@@ -155,7 +168,7 @@ border: 1px solid;
 <p class="subtitle-text">MeteoFocus Institutional Alpha Engine // Automated NOAA Data Tracker</p>
 </div>
 <div style="display: flex; align-items: center; gap: 16px;">
-<a href="https://github.com/gtvegas11-png/metofocus/wiki" target="_blank" style="color: #00ff66; text-decoration: none; font-size: 11px; background-color: #111827; border: 1px solid #1e293b; padding: 6px 12px; border-radius: 4px; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.borderColor='#00ff66'" onmouseout="this.style.borderColor='#1e293b'">
+<a href="https://github.com" target="_blank" class="wiki-btn">
 📚 VIEW WIKI DOCUMENTATION →
 </a>
 <div class="status-badge" id="conn-status">LIVE DATA STREAM ACTIVE</div>
@@ -175,7 +188,6 @@ border: 1px solid;
 </div>
 
 <script>
-// High-fidelity local algorithmic data registry
 const hubs = {
 "ERCOT_TEXAS_GRID": { model: "ECMWF", current_temp: 74.5, projected_dd: 9.5, prev_dd: 9.5 },
 "PJM_NORTHEAST_GRID": { model: "GFS", current_temp: 61.2, projected_dd: 2.1, prev_dd: 2.1 },
@@ -217,8 +229,6 @@ const randomRegion = regions[Math.floor(Math.random() * regions.length)];
 const info = hubs[randomRegion];
 
 info.prev_dd = info.projected_dd;
-
-// Generate standard institutional model trend drift fluctuations
 const shift = Math.round((Math.random() * 6 - 3) * 10) / 10;
 info.projected_dd = Math.max(0, Math.round((info.projected_dd + shift) * 10) / 10);
 info.current_temp = Math.round((info.current_temp + (Math.random() * 2 - 1)) * 10) / 10;
@@ -226,10 +236,8 @@ info.current_temp = Math.round((info.current_temp + (Math.random() * 2 - 1)) * 1
 if (Math.abs(shift) >= 0.2) {
 addLog(randomRegion, info.model, shift);
 }
-
 renderTiles();
 
-// Flash card to indicate life update
 const el = document.getElementById(`card-${randomRegion}`);
 if (el) {
 el.classList.add('updated');
@@ -261,12 +269,3 @@ const logHTML = `
 `;
 logList.insertAdjacentHTML('afterbegin', logHTML);
 }
-
-// Run baseline setup
-renderTiles();
-
-// Loop automated updates smoothly every 3 seconds
-setInterval(runAutomatedUpdate, 3000);
-</script>
-</body>
-</html>
