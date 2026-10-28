@@ -540,7 +540,7 @@ function exportCSV(){
  a.href=url;a.download=`meteofocus-${activeRegion}-history.csv`;a.click();URL.revokeObjectURL(url);
 }
 $("hub-select").addEventListener("change",renderDetail);
-$("refresh-btn").addEventListener("click",refreshAll);
+$("refresh-btn")?.addEventListener("click",refreshAll); // Optional: the refresh button is not present in this page layout.
 $("add-region-btn").addEventListener("click",addRegion);
 $("export-btn").addEventListener("click",exportCSV);
 $("clear-history-btn").addEventListener("click",()=>{if(confirm("Clear saved forecast history for all regions in this browser?")){history=[];saveHistory();renderHistory();}});
