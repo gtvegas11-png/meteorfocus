@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeteoFocus Weather Intelligence</title>
+
+<style>
+body {
+    background-color: #0b0f19;
+    color: #00ff66;
+    font-family: "Courier New", Courier, monospace;
+    padding: 24px;
+    margin: 0;
+}
+
+.max-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.header-module {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #1e293b;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+
+.title-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.subtitle-text {
+    font-size: 12px;
+    color: #55657e;
+    margin: 4px 0 0 0;
+}
+
+.status-badge {
+    background-color: #1e293b;
+    padding: 6px 12px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid #334155;
+    animation: pulse 2s infinite;
+}
+
+.section-label {
+    color: #94a3b8;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.tile-card {
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    padding: 20px;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+}
+
+.tile-card.updated {
+    border-color: #00ff66;
+}
+
+.tile-meta {
+    font-size: 10px;
+    color: #475569;
+}
+
+.tile-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f1f5f9;
+    margin: 4px 0;
+}
+
+.tile-subdata {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.flex-row-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 16px;
+}
+
+.big-metric {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 10px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.delta-val {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.text-up {
+    color: #34d399;
+}
+
+.text-down {
+    color: #f87171;
+}
+
+.text-neutral {
+    color: #94a3b8;
+}
+
+.log-box {
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 16px;
+    height: 250px;
+    overflow-y: auto;
+}
+
+.empty-msg {
+    color: #475569;
+    font-size: 12px;
+    text-align: center;
+    padding: 40px 0;
+}
+
+.log-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #1e293b;
+    font-size: 12px;
+}
+
+.badge-flip {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    margin-right: 8px;
+    border: 1px solid;
+}
+
+.badge-high {
+    background-color: #450a0a;
+    color: #f87171;
+    border-color: #991b1b;
+}
+
+.badge-med {
+    background-color: #451a03;
+    color: #fbbf24;
+    border-color: #9a3412;
+}
+
+.wiki-btn {
+    color: #00ff66;
+    text-decoration: none;
+    font-size: 11px;
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all .2s;
+}
+
+.wiki-btn:hover {
+    border-color: #00ff66;
+}
+
+@keyframes pulse {
+    0% {opacity:1;}
+    50% {opacity:.5;}
+    100% {opacity:1;}
+}
+@media (max-width: 640px) {
+    body { padding: 12px; }
+    .header-module { align-items: flex-start; flex-direction: column; gap: 14px; }
+    .header-module > div:last-child { flex-wrap: wrap; }
+    .log-row { gap: 6px; flex-wrap: wrap; }
+    .big-metric { font-size: 26px; }
+}
+
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+.toolbar-actions { display:flex; gap:8px; flex-wrap:wrap; }
+button { cursor:pointer; font-family:inherit; }
+button:hover { border-color:#00ff66; color:#fff; }
+.metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:12px; margin-bottom:24px; }
+.metric-chip { background:#111827; border:1px solid #1e293b; border-radius:6px; padding:16px; }
+.metric-value { color:#f8fafc; font-size:22px; font-weight:bold; margin-top:8px; }
+.region-form { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; }
+.region-form input { min-width:0; padding:10px; background:#0b0f19; border:1px solid #334155; color:#f1f5f9; border-radius:4px; font-family:inherit; }
+#hub-select { max-width:100%; }
+@media(max-width:800px){ .region-form { grid-template-columns:1fr 1fr; } .region-form input:first-child { grid-column:span 2; } .toolbar { align-items:flex-start; } }
+@media(max-width:520px){ .region-form { grid-template-columns:1fr; } .region-form input:first-child { grid-column:auto; } .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .metric-value {font-size:18px;} .wiki-btn { padding:6px 8px; } }
+
+</style>
+</head>
+
+<body>
+
+<div class="max-container">
+
+    <div class="header-module">
+        <div>
+            <h1 class="title-text">AMER_COMMODITY_WEATHER_TERMINAL</h1>
+            <p class="subtitle-text">
+                Weather Intelligence for Energy Operations // NOAA/NWS-backed
+            </p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;">
+
+            <a href="https://github.com/gtvegas11-png/metofocus/wiki"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="wiki-btn">
+                📚 VIEW WIKI DOCUMENTATION →
+            </a>
+
+            <div class="status-badge">
+                NOAA CONNECTION INITIALIZING
+            </div>
+
+        </div>
+    </div>
+
+    <h2 class="section-label">
+        Active Hub Asset Projections
+    </h2>
+
+    <div class="grid-layout" id="grid-container"></div>
+
+    <h2 class="section-label">Regional Forecast Detail // NOAA NWS</h2>
+    <div class="tile-card">
+        <div class="flex-row-box" style="margin-top:0;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label for="hub-select" class="tile-subdata">REGION</label>
+            <select id="hub-select" style="background:#0b0f19;color:#f1f5f9;border:1px solid #334155;padding:8px;border-radius:4px;font-family:inherit;">
+                <option value="ERCOT_TEXAS_GRID">ERCOT / Texas</option>
+                <option value="PJM_NORTHEAST_GRID">PJM / Northeast</option>
+                <option value="MIDWEST_CROP_BELT">Midwest Crop Belt</option>
+            </select>
+            <span id="last-updated" class="tile-subdata">Refresh status appears below.</span>
+        </div>
+        <div id="hourly-forecast" class="log-box" style="height:auto;max-height:300px;margin-top:16px;">
+            <div class="empty-msg">Connecting to National Weather Service…</div>
+        </div>
+    </div>
+
+    <h2 class="section-label">Station Measurements & Degree-Day Indicators</h2>
+    <div class="metric-grid" id="station-metrics"></div>
+    <div class="tile-card" style="margin-bottom:24px">
+        <div class="tile-title">Forecast Metadata & Available Grid Fields</div>
+        <div id="model-info" class="tile-subdata">Waiting for NOAA grid metadata…</div>
+    </div>
+
+    <h2 class="section-label">Local Forecast Revision History</h2>
+    <div class="tile-card" style="margin-bottom:24px">
+        <div class="tile-subdata" style="margin-bottom:12px">History is collected from successful refreshes in this browser. It is not NOAA's archived model-run history.</div>
+        <div id="history-list" class="log-box" style="height:auto;max-height:260px"><div class="empty-msg">Waiting for data…</div></div>
+        <div style="margin-top:12px"><button class="wiki-btn" id="clear-history-btn">CLEAR LOCAL HISTORY</button></div>
+    </div>
+
+    <h2 class="section-label">Add a Weather Region</h2>
+    <div class="tile-card" style="margin-bottom:24px">
+        <div class="tile-subdata" style="margin-bottom:12px">Add a representative point for a balancing authority, load zone, plant, pipeline, or weather-sensitive asset. Coordinates should be selected to represent the target footprint; one point is not a grid-wide average.</div>
+        <div class="region-form">
+            <input id="region-name" placeholder="Region / asset name" aria-label="Region or asset name">
+            <input id="region-lat" type="number" step="any" min="-90" max="90" placeholder="Latitude" aria-label="Latitude">
+            <input id="region-lon" type="number" step="any" min="-180" max="180" placeholder="Longitude" aria-label="Longitude">
+            <input id="region-state" maxlength="2" placeholder="State (TX)" aria-label="Two-letter state code">
+            <button class="wiki-btn" id="add-region-btn">ADD REGION</button>
+        </div>
+        <div class="tile-subdata" style="margin-top:10px">Configured regions: <span id="region-count">0</span>. Region settings are stored in this browser.</div>
+    </div>
+
+    <h2 class="section-label">Active Weather Alerts // NOAA NWS</h2>
+    <div class="tile-card" id="alerts-panel">
+        <div class="empty-msg">Loading active alerts…</div>
+    </div>
+
+    <p id="data-status" class="tile-subdata" role="status" aria-live="polite" style="margin:8px 0 24px;">
+        DATA SOURCE: NOAA/NWS API · Initializing…
+    </p>
+
+    <h2 class="section-label">
+        System Events & Data Status
+    </h2>
+
+    <div class="tile-card">
+        <div class="tile-subdata">No synthetic trading signals are generated. Forecast changes and local snapshots are shown in the selected region's history above.</div>
+    </div>
+
+</div>
+
+<script>
+/*
+ MeteoFocus Weather Intelligence
+ Live sources: NWS API (forecast, station observations, alerts, forecast grid data).
+ Optional local proxy/cache: server.js in the companion package.
+ No random weather values are generated.
+*/
+const API = "/api/nws";
+const DIRECT_NWS = "https://api.weather.gov";
+const USE_LOCAL_PROXY = location.protocol !== "file:" && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+const NWS = USE_LOCAL_PROXY ? API : DIRECT_NWS;
+const REFRESH_MS = 10 * 60 * 1000;
+const STORAGE_KEY = "meteofocus.regions.v2";
+const HISTORY_KEY = "meteofocus.history.v2";
+const $ = id => document.getElementById(id);
+const defaultRegions = [
+ {id:"ercot",name:"ERCOT / North Texas",lat:32.7767,lon:-96.7970,state:"TX",market:"ERCOT"},
+ {id:"pjm",name:"PJM / Pittsburgh",lat:40.4406,lon:-79.9959,state:"PA",market:"PJM"},
+ {id:"miso",name:"MISO / Des Moines",lat:41.5868,lon:-93.6250,state:"IA",market:"MISO"},
+ {id:"caiso",name:"CAISO / Sacramento",lat:38.5816,lon:-121.4944,state:"CA",market:"CAISO"},
+ {id:"nyiso",name:"NYISO / Albany",lat:42.6526,lon:-73.7562,state:"NY",market:"NYISO"},
+ {id:"isone",name:"ISO-NE / Boston",lat:42.3601,lon:-71.0589,state:"MA",market:"ISO-NE"}
+];
+let regions = loadRegions();
+let dataByRegion = {};
+let activeRegion = regions[0]?.id;
+let history = loadHistory();
+let lastRefresh = null;
+let busy = false;
+
+function loadRegions(){
+ try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(Array.isArray(saved)&&saved.length) return saved; } catch(e){}
+ return defaultRegions.map(x=>({...x}));
+}
+function saveRegions(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(regions)); }
+function loadHistory(){ try { const h=JSON.parse(localStorage.getItem(HISTORY_KEY)); return Array.isArray(h)?h:[]; } catch(e){return [];} }
+function saveHistory(){ try { localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(-2000))); } catch(e){} }
+function safe(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function n(v){return typeof v==="number"&&Number.isFinite(v)?v:null}
+function f(v,d=1){return n(v)===null?"—":v.toFixed(d)}
+function cToF(v){return n(v)===null?null:v*9/5+32}
+function asF(value,unit){return n(value)===null?null:(unit==="C"?cToF(value):value)}
+function toMph(value,unit){if(n(value)===null)return null;return unit==="km_h"?value*.621371:unit==="m_s"?value*2.23694:value}
+function toInHg(value,unit){if(n(value)===null)return null;if(unit==="Pa")return value/3386.389;if(unit==="hPa")return value/33.86389;return value}
+function fmtDate(s,opts={month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}){if(!s)return "—";const d=new Date(s);return Number.isNaN(d.getTime())?"—":d.toLocaleString([],opts)}
+async function getJSON(url){
+ const res=await fetch(url,{headers:{"Accept":"application/geo+json, application/ld+json"},cache:"no-store"});
+ if(!res.ok) throw new Error(`Request failed (${res.status}) for ${url}`);
+ return res.json();
+}
+async function nws(url){
+ let full=url.startsWith("http")?url:`${DIRECT_NWS}${url}`;
+ if(USE_LOCAL_PROXY && full.startsWith(DIRECT_NWS)) full=full.replace(DIRECT_NWS,API);
+ return getJSON(full);
+}
+function props(obj){return obj?.properties||{}}
+function propF(p){return asF(p?.value,p?.unitCode?.endsWith(":degC")?"C":"F")}
+function periodF(p){return asF(p?.temperature,p?.temperatureUnit)}
+function avg(arr){const a=arr.filter(nv=>n(nv)!==null);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function degreeDays(hourly){
+ // Hourly degree-day estimate using a base of 65°F. Hourly NWS periods are treated as 1 hour.
+ const temps=hourly.map(periodF).filter(v=>v!==null);
+ return {hdd:temps.length?temps.reduce((s,t)=>s+Math.max(0,65-t)/24,0):null,
+ cdd:temps.length?temps.reduce((s,t)=>s+Math.max(0,t-65)/24,0):null,count:temps.length};
+}
+function getObsValue(p,key){const x=p?.[key];return x&&n(x.value)!==null?x.value:null}
+function observationShape(feature, stationName){
+ const p=props(feature);
+ const temp=getObsValue(p,"temperature"), dew=getObsValue(p,"dewpoint"), wind=getObsValue(p,"windSpeed"), gust=getObsValue(p,"windGust");
+ const rh=getObsValue(p,"relativeHumidity"), pressure=getObsValue(p,"barometricPressure"), vis=getObsValue(p,"visibility"), precip=getObsValue(p,"precipitationLastHour");
+ return {station:p.station||stationName||"Reporting station",description:p.textDescription||"Conditions unavailable",
+ tempF:temp===null?null:cToF(temp),dewF:dew===null?null:cToF(dew),humidity:rh,
+ windMph:wind===null?null:wind*.621371,gustMph:gust===null?null:gust*.621371,
+ pressureInHg:pressure===null?null:pressure/3386.389,visibilityMi:vis===null?null:vis/1609.344,
+ precipIn:precip===null?null:precip/25.4,observedAt:p.timestamp||null,quality:p.qualityControl||[]};
+}
+async function loadRegion(region){
+ const point=await nws(`/points/${region.lat},${region.lon}`);
+ const pp=props(point);
+ if(!pp.forecastHourly||!pp.forecast||!pp.observationStations) throw new Error("NWS point metadata incomplete");
+ const [hourlyR,dailyR,stationsR,alertsR,gridR]=await Promise.allSettled([
+  nws(pp.forecastHourly),nws(pp.forecast),nws(pp.observationStations),
+  nws(`/alerts/active?point=${region.lat},${region.lon}`),pp.forecastGridData?nws(pp.forecastGridData):Promise.resolve(null)
+ ]);
+ if(hourlyR.status!=="fulfilled") throw hourlyR.reason;
+ const hourly=props(hourlyR.value).periods||[];
+ const daily=dailyR.status==="fulfilled"?(props(dailyR.value).periods||[]):[];
+ const stations=stationsR.status==="fulfilled"?(stationsR.value.features||[]):[];
+ let obs=null, stationName=null;
+ if(stations.length){
+  const first=stations[0], stationUrl=first.id||first["@id"];
+  stationName=props(first).name||null;
+  if(stationUrl){
+   try{const ob=await nws(`${stationUrl.replace(/\/$/,"")}/observations/latest`);obs=ob.features?observationShape(ob.features[0],stationName):ob.properties?observationShape(ob,stationName):null;}
+   catch(err){console.warn("Station observation unavailable",region.name,err);}
+  }
+ }
+ const alerts=alertsR.status==="fulfilled"?(alertsR.value.features||[]):[];
+ const grid=gridR.status==="fulfilled"&&gridR.value?props(gridR.value):null;
+ const dd=degreeDays(hourly.slice(0,24));
+ const record={region,hourly,daily,obs,stationName,alerts,dd,grid,
+   fetchedAt:new Date().toISOString(),forecastUpdated:props(hourlyR.value).updateTime||null,
+   stationCount:stations.length,pointOffice:pp.forecastOffice||null,
+   errors:[dailyR,stationsR,alertsR,gridR].filter(x=>x.status==="rejected").length};
+ dataByRegion[region.id]=record;
+ const hist={ts:record.fetchedAt,id:region.id,name:region.name,cdd:dd.cdd,hdd:dd.hdd,tempF:obs?.tempF??(hourly[0]?periodF(hourly[0]):null)};
+ if(hist.cdd!==null||hist.hdd!==null||hist.tempF!==null){history.push(hist);history=history.slice(-2000);saveHistory();}
+ return record;
+}
+function renderRegionSelect(){
+ const sel=$("hub-select"), previous=activeRegion;
+ sel.innerHTML=regions.map(r=>`<option value="${safe(r.id)}">${safe(r.name)}</option>`).join("");
+ if(regions.some(r=>r.id===previous))sel.value=previous;else{activeRegion=regions[0]?.id;sel.value=activeRegion;}
+}
+function renderTiles(){
+ $("grid-container").innerHTML=regions.map(r=>{
+  const d=dataByRegion[r.id], o=d?.obs, p=d?.hourly?.[0], temp=o?.tempF??(p?periodF(p):null);
+  const label=o?.tempF!==null&&o?.tempF!==undefined?"LATEST STATION OBSERVATION":"NEXT HOURLY FORECAST";
+  const alerts=d?.alerts?.length??0;
+  return `<article class="tile-card ${d?"updated":""}">
+   <div class="tile-meta">NOAA/NWS · ${safe(r.market)} · ${d?"UPDATED "+safe(fmtDate(d.fetchedAt,{hour:"numeric",minute:"2-digit"})):"WAITING FOR DATA"}</div>
+   <div class="tile-title">${safe(r.name)}</div>
+   <div class="tile-subdata">${label}: ${temp===null?"—":f(temp)+"°F"} ${o?.description? "· "+safe(o.description):p?"· "+safe(p.shortForecast||""):""}</div>
+   <div class="flex-row-box">
+    <div><div class="metric-label">24-HOUR FORECAST CDD*</div><div class="big-metric">${f(d?.dd?.cdd)}</div><div class="tile-subdata">HDD: ${f(d?.dd?.hdd)}</div></div>
+    <div style="text-align:right"><div class="metric-label">WIND / GUST</div><div class="delta-val text-neutral" style="font-size:16px">${o?.windMph==null?"—":f(o.windMph)+" mph"}</div><div class="tile-subdata">${o?.gustMph==null?"Gust —":"Gust "+f(o.gustMph)+" mph"}</div></div>
+   </div>
+   <div class="tile-subdata" style="margin-top:12px">Station: ${safe(d?.stationName||o?.station||"not available")} · Active alerts: ${alerts}</div>
+   <div style="margin-top:14px"><button class="wiki-btn" onclick="selectRegion('${safe(r.id)}')">OPEN REGION →</button></div>
+  </article>`;
+ }).join("");
+}
+window.selectRegion=id=>{activeRegion=id;$("hub-select").value=id;renderDetail();};
+function renderDetail(){
+ activeRegion=$("hub-select").value;
+ const d=dataByRegion[activeRegion], r=regions.find(x=>x.id===activeRegion);
+ if(!r)return;
+ renderForecast(d);renderAlerts(d);renderMetrics(d);renderModelInfo(d,r);renderHistory();
+}
+function renderForecast(d){
+ const box=$("hourly-forecast");
+ if(!d){box.innerHTML='<div class="empty-msg">No data loaded for this region yet.</div>';return;}
+ box.innerHTML=(d.hourly||[]).slice(0,48).map(p=>{
+  const t=periodF(p),pop=p.probabilityOfPrecipitation?.value,wind=p.windSpeed||"—";
+  return `<div class="log-row">
+   <div style="min-width:118px;color:#94a3b8">${safe(fmtDate(p.startTime,{weekday:"short",month:"short",day:"numeric",hour:"numeric"}))}</div>
+   <div style="flex:1;min-width:140px;color:#f1f5f9">${safe(p.shortForecast||"Forecast unavailable")}</div>
+   <div style="min-width:62px;text-align:right;color:white;font-weight:bold">${t===null?"—":f(t)+"°F"}</div>
+   <div style="min-width:66px;text-align:right;color:#94a3b8">PoP ${pop==null?"—":pop+"%"}</div>
+   <div style="min-width:85px;text-align:right;color:#94a3b8">Wind ${safe(wind)}</div>
+  </div>`;
+ }).join("")||'<div class="empty-msg">Hourly forecast unavailable.</div>';
+ if(d.obs)box.insertAdjacentHTML("afterbegin",`<div class="tile-subdata" style="padding:0 0 12px">STATION ${safe(d.obs.station)} · OBSERVED ${safe(fmtDate(d.obs.observedAt))} · DEW POINT ${f(d.obs.dewF)}°F · RH ${f(d.obs.humidity,0)}% · PRESSURE ${d.obs.pressureInHg==null?"—":f(d.obs.pressureInHg,2)+" inHg"} · VISIBILITY ${d.obs.visibilityMi==null?"—":f(d.obs.visibilityMi,1)+" mi"}</div>`);
+}
+function renderAlerts(d){
+ const panel=$("alerts-panel"), alerts=d?.alerts;
+ if(!d){panel.innerHTML='<div class="empty-msg">Waiting for region data.</div>';return;}
+ if(!alerts?.length){panel.innerHTML='<div class="tile-subdata">No active NWS alerts returned for this selected location. This is not a guarantee of hazard-free conditions.</div>';return;}
+ panel.innerHTML=alerts.map(a=>{
+  const p=props(a),sev=p.severity||"Unknown",cls=["Extreme","Severe"].includes(sev)?"badge-high":"badge-med";
+  return `<div class="log-row" style="align-items:flex-start;gap:12px"><div style="min-width:90px"><span class="badge-flip ${cls}">${safe(sev.toUpperCase())}</span></div><div style="flex:1"><div style="color:#f1f5f9;font-weight:bold">${safe(p.event||"Weather alert")}</div><div class="tile-subdata">${safe(p.areaDesc||"Area not specified")}</div><div class="tile-subdata">${safe(p.headline||"")}</div><div class="tile-subdata">Effective ${safe(fmtDate(p.effective))} · Expires ${safe(fmtDate(p.expires))}</div>${p.web?`<a class="wiki-btn" href="${safe(p.web)}" target="_blank" rel="noopener">OFFICIAL ALERT DETAILS ↗</a>`:""}</div></div>`;
+ }).join("");
+}
+function renderMetrics(d){
+ const el=$("station-metrics");
+ if(!d){el.innerHTML='<div class="empty-msg">Waiting for station measurements.</div>';return;}
+ const o=d.obs||{};
+ const items=[
+ ["Temperature",o.tempF==null?"—":f(o.tempF)+" °F"],["Dew point",o.dewF==null?"—":f(o.dewF)+" °F"],
+ ["Relative humidity",o.humidity==null?"—":f(o.humidity,0)+"%"],["Wind",o.windMph==null?"—":f(o.windMph)+" mph"],
+ ["Wind gust",o.gustMph==null?"—":f(o.gustMph)+" mph"],["Pressure",o.pressureInHg==null?"—":f(o.pressureInHg,2)+" inHg"],
+ ["Visibility",o.visibilityMi==null?"—":f(o.visibilityMi,1)+" mi"],["Precipitation (last hour)",o.precipIn==null?"—":f(o.precipIn,2)+" in"],
+ ["Forecast CDD (24h)*",f(d.dd.cdd)],["Forecast HDD (24h)*",f(d.dd.hdd)]
+ ];
+ el.innerHTML=items.map(([label,value])=>`<div class="metric-chip"><div class="metric-label">${safe(label)}</div><div class="metric-value">${safe(value)}</div></div>`).join("");
+}
+function renderModelInfo(d,r){
+ const el=$("model-info");
+ if(!d){el.innerHTML="No forecast metadata available.";return;}
+ const grid=d.grid||{};
+ const fields=["temperature","dewpoint","relativeHumidity","windSpeed","windGust","skyCover","probabilityOfPrecipitation","quantitativePrecipitation","snowfallAmount","iceAccumulation","pressure","visibility","apparentTemperature"];
+ const present=fields.filter(k=>Array.isArray(grid[k]?.values));
+ el.innerHTML=`<div class="tile-subdata">REGION ${safe(r.name)} · COORDINATES ${r.lat.toFixed(3)}, ${r.lon.toFixed(3)} · NWS OFFICE ${safe(d.pointOffice||"—")}</div>
+ <div class="tile-subdata">FORECAST UPDATED ${safe(fmtDate(d.forecastUpdated))} · STATIONS FOUND ${d.stationCount} · GRID FIELDS AVAILABLE ${present.length}</div>
+ <div class="tile-subdata">GRID FIELD KEYS: ${safe(present.join(", ")||"Unavailable")}</div>
+ <div class="tile-subdata" style="margin-top:8px">The NWS point forecast is an operational forecast product; it is not labeled here as raw GFS or ECMWF output. Direct GFS/GEFS comparison requires GRIB/model ingestion and validation.</div>`;
+}
+function renderHistory(){
+ const regionHistory=history.filter(x=>x.id===activeRegion).slice(-48).reverse();
+ const el=$("history-list");
+ if(!regionHistory.length){el.innerHTML='<div class="empty-msg">History starts after successful data refreshes in this browser. Earlier history is not backfilled.</div>';return;}
+ el.innerHTML=regionHistory.map(x=>`<div class="log-row"><div style="color:#94a3b8;min-width:140px">${safe(fmtDate(x.ts))}</div><div style="flex:1;color:#f1f5f9">Temperature ${x.tempF==null?"—":f(x.tempF)+"°F"}</div><div style="color:#94a3b8">CDD ${f(x.cdd)} · HDD ${f(x.hdd)}</div></div>`).join("");
+}
+async function refreshAll(){
+ if(busy)return;busy=true;$("data-status").textContent="NOAA/NWS · Refreshing forecast and station data…";
+ const results=await Promise.allSettled(regions.map(loadRegion));
+ const failed=results.filter(x=>x.status==="rejected");
+ lastRefresh=new Date();
+ renderTiles();renderRegionSelect();renderDetail();
+ const badge=$("connection-badge");
+ if(failed.length===0){$("data-status").textContent=`NOAA/NWS · ${regions.length} regions updated · ${lastRefresh.toLocaleString()} · Auto-refresh every 10 min`;badge.textContent="NOAA DATA CONNECTED";}
+ else{$("data-status").textContent=`NOAA/NWS · ${regions.length-failed.length}/${regions.length} regions updated · Some data unavailable; see browser console.`;badge.textContent=results.every(x=>x.status==="rejected")?"CONNECTION ERROR":"PARTIAL DATA";}
+ results.forEach((x,i)=>{if(x.status==="rejected")console.error("Region failed",regions[i]?.name,x.reason);});
+ busy=false;
+}
+function addRegion(){
+ const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
+ if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat>90||lon < -180||lon>180||!/^[A-Z]{2}$/.test(state)){alert("Enter a region name, valid latitude/longitude, and two-letter US state code.");return;}
+ const id="custom-"+Date.now();
+ regions.push({id,name,lat,lon,state,market:"CUSTOM"});saveRegions();activeRegion=id;renderRegionSelect();$("region-count").textContent=regions.length;refreshAll();
+ $("region-name").value="";$("region-lat").value="";$("region-lon").value="";$("region-state").value="";
+}
+function exportCSV(){
+ const rows=[["timestamp","region_id","region_name","temperature_f","forecast_cdd_24h","forecast_hdd_24h"]];
+ history.filter(x=>x.id===activeRegion).forEach(x=>rows.push([x.ts,x.id,x.name,x.tempF??"",x.cdd??"",x.hdd??""]));
+ const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=`meteofocus-${activeRegion}-history.csv`;a.click();URL.revokeObjectURL(url);
+}
+$("hub-select").addEventListener("change",renderDetail);
+$("refresh-btn").addEventListener("click",refreshAll);
+$("add-region-btn").addEventListener("click",addRegion);
+$("export-btn").addEventListener("click",exportCSV);
+$("clear-history-btn").addEventListener("click",()=>{if(confirm("Clear saved forecast history for all regions in this browser?")){history=[];saveHistory();renderHistory();}});
+renderRegionSelect();
+$("region-count").textContent=regions.length;
+refreshAll();
+setInterval(refreshAll,REFRESH_MS);
+</script>
+
+<footer class="tile-subdata" style="max-width:1100px;margin:0 auto 24px;line-height:1.7">
+    <strong>DATA / METHODS NOTE:</strong> NOAA/NWS forecasts and station observations are live when requests succeed. Forecast CDD/HDD are rough estimates computed from hourly forecast temperatures using a 65°F base; they are not official utility demand forecasts. The dashboard does not currently parse raw GFS/GEFS GRIB files, provide a validated load model, or guarantee alert delivery. Verify critical operational decisions with authoritative providers and your organization's procedures. Source: <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS API documentation</a> · <a href="https://nomads.ncep.noaa.gov/" target="_blank" rel="noopener">NOAA NOMADS model data</a>.
+</footer>
+</body>
+</html>
