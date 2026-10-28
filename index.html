@@ -366,9 +366,24 @@ function toMph(value,unit){if(n(value)===null)return null;return unit==="km_h"?v
 function toInHg(value,unit){if(n(value)===null)return null;if(unit==="Pa")return value/3386.389;if(unit==="hPa")return value/33.86389;return value}
 function fmtDate(s,opts={month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}){if(!s)return "—";const d=new Date(s);return Number.isNaN(d.getTime())?"—":d.toLocaleString([],opts)}
 async function getJSON(url){
- const res=await fetch(url,{headers:{"Accept":"application/geo+json, application/ld+json"},cache:"no-store"});
- if(!res.ok) throw new Error(`Request failed (${res.status}) for ${url}`);
- return res.json();
+ // Retry transient NWS outages. Browser code cannot set the restricted User-Agent header;
+ // a server-side proxy is needed if NWS requires a custom application User-Agent.
+ let lastError;
+ for(let attempt=0;attempt<3;attempt++){
+  try{
+   const res=await fetch(url,{headers:{"Accept":"application/geo+json, application/ld+json"},cache:"no-store"});
+   if(res.ok) return await res.json();
+   const error=new Error(`NWS request failed (${res.status}) for ${url}`);
+   error.status=res.status;
+   if(![429,500,502,503,504].includes(res.status)) throw error;
+   lastError=error;
+  }catch(err){
+   lastError=err;
+   if(err.status && ![429,500,502,503,504].includes(err.status)) throw err;
+  }
+  if(attempt<2) await new Promise(resolve=>setTimeout(resolve,1000*(attempt+1)));
+ }
+ throw lastError||new Error(`NWS request failed for ${url}`);
 }
 async function nws(url){
  let full=url.startsWith("http")?url:`${DIRECT_NWS}${url}`;
@@ -399,34 +414,43 @@ function observationShape(feature, stationName){
 async function loadRegion(region){
  const point=await nws(`/points/${region.lat},${region.lon}`);
  const pp=props(point);
- if(!pp.forecastHourly||!pp.forecast||!pp.observationStations) throw new Error("NWS point metadata incomplete");
- const [hourlyR,dailyR,stationsR,alertsR,gridR]=await Promise.allSettled([
-  nws(pp.forecastHourly),nws(pp.forecast),nws(pp.observationStations),
-  nws(`/alerts/active?point=${region.lat},${region.lon}`),pp.forecastGridData?nws(pp.forecastGridData):Promise.resolve(null)
+ if(!pp.forecastHourly&&!pp.forecast&&!pp.observationStations) throw new Error("NWS point metadata did not include usable forecast/station endpoints");
+ const settled=await Promise.allSettled([
+  pp.forecastHourly?nws(pp.forecastHourly):Promise.reject(new Error("Hourly forecast URL unavailable")),
+  pp.forecast?nws(pp.forecast):Promise.reject(new Error("Daily forecast URL unavailable")),
+  pp.observationStations?nws(pp.observationStations):Promise.reject(new Error("Station list URL unavailable")),
+  nws(`/alerts/active?point=${region.lat},${region.lon}`),
+  pp.forecastGridData?nws(pp.forecastGridData):Promise.resolve(null)
  ]);
- if(hourlyR.status!=="fulfilled") throw hourlyR.reason;
- const hourly=props(hourlyR.value).periods||[];
+ const [hourlyR,dailyR,stationsR,alertsR,gridR]=settled;
+ const hourly=hourlyR.status==="fulfilled"?(props(hourlyR.value).periods||[]):[];
  const daily=dailyR.status==="fulfilled"?(props(dailyR.value).periods||[]):[];
  const stations=stationsR.status==="fulfilled"?(stationsR.value.features||[]):[];
- let obs=null, stationName=null;
+ let obs=null, stationName=null, stationError=null;
  if(stations.length){
   const first=stations[0], stationUrl=first.id||first["@id"];
   stationName=props(first).name||null;
   if(stationUrl){
    try{const ob=await nws(`${stationUrl.replace(/\/$/,"")}/observations/latest`);obs=ob.features?observationShape(ob.features[0],stationName):ob.properties?observationShape(ob,stationName):null;}
-   catch(err){console.warn("Station observation unavailable",region.name,err);}
+   catch(err){stationError=err.message;console.warn("Station observation unavailable",region.name,err);}
   }
  }
  const alerts=alertsR.status==="fulfilled"?(alertsR.value.features||[]):[];
  const grid=gridR.status==="fulfilled"&&gridR.value?props(gridR.value):null;
  const dd=degreeDays(hourly.slice(0,24));
+ const errors=[];
+ [["hourly forecast",hourlyR],["daily forecast",dailyR],["station list",stationsR],["alerts",alertsR],["grid data",gridR]].forEach(([label,result])=>{if(result.status==="rejected")errors.push(`${label}: ${result.reason?.message||result.reason}`);});
+ if(stationError)errors.push(`latest station observation: ${stationError}`);
+ const usable=hourly.length||daily.length||obs||stations.length||alertsR.status==="fulfilled"||grid;
  const record={region,hourly,daily,obs,stationName,alerts,dd,grid,
-   fetchedAt:new Date().toISOString(),forecastUpdated:props(hourlyR.value).updateTime||null,
-   stationCount:stations.length,pointOffice:pp.forecastOffice||null,
-   errors:[dailyR,stationsR,alertsR,gridR].filter(x=>x.status==="rejected").length};
+   fetchedAt:new Date().toISOString(),forecastUpdated:hourlyR.status==="fulfilled"?(props(hourlyR.value).updateTime||null):null,
+   stationCount:stations.length,pointOffice:pp.forecastOffice||null,errors,
+   partial:errors.length>0,hasUsableData:!!usable,
+   mainError:hourlyR.status==="rejected"?(hourlyR.reason?.message||String(hourlyR.reason)):null};
  dataByRegion[region.id]=record;
  const hist={ts:record.fetchedAt,id:region.id,name:region.name,cdd:dd.cdd,hdd:dd.hdd,tempF:obs?.tempF??(hourly[0]?periodF(hourly[0]):null)};
  if(hist.cdd!==null||hist.hdd!==null||hist.tempF!==null){history.push(hist);history=history.slice(-2000);saveHistory();}
+ if(!usable) throw new Error(errors.join("; ")||"No NWS data endpoints returned usable data");
  return record;
 }
 function renderRegionSelect(){
@@ -440,7 +464,7 @@ function renderTiles(){
   const label=o?.tempF!==null&&o?.tempF!==undefined?"LATEST STATION OBSERVATION":"NEXT HOURLY FORECAST";
   const alerts=d?.alerts?.length??0;
   return `<article class="tile-card ${d?"updated":""}">
-   <div class="tile-meta">NOAA/NWS · ${safe(r.market)} · ${d?"UPDATED "+safe(fmtDate(d.fetchedAt,{hour:"numeric",minute:"2-digit"})):"WAITING FOR DATA"}</div>
+   <div class="tile-meta">NOAA/NWS · ${safe(r.market)} · ${d?(d.partial?"PARTIAL DATA":"UPDATED")+" "+safe(fmtDate(d.fetchedAt,{hour:"numeric",minute:"2-digit"})):"WAITING FOR DATA"}</div>
    <div class="tile-title">${safe(r.name)}</div>
    <div class="tile-subdata">${label}: ${temp===null?"—":f(temp)+"°F"} ${o?.description? "· "+safe(o.description):p?"· "+safe(p.shortForecast||""):""}</div>
    <div class="flex-row-box">
@@ -448,6 +472,7 @@ function renderTiles(){
     <div style="text-align:right"><div class="metric-label">WIND / GUST</div><div class="delta-val text-neutral" style="font-size:16px">${o?.windMph==null?"—":f(o.windMph)+" mph"}</div><div class="tile-subdata">${o?.gustMph==null?"Gust —":"Gust "+f(o.gustMph)+" mph"}</div></div>
    </div>
    <div class="tile-subdata" style="margin-top:12px">Station: ${safe(d?.stationName||o?.station||"not available")} · Active alerts: ${alerts}</div>
+   ${d?.mainError?`<div class="tile-subdata" style="margin-top:6px;color:#fbbf24">Forecast issue: ${safe(d.mainError)}</div>`:""}
    <div style="margin-top:14px"><button class="wiki-btn" onclick="selectRegion('${safe(r.id)}')">OPEN REGION →</button></div>
   </article>`;
  }).join("");
@@ -492,7 +517,7 @@ function renderMetrics(d){
  ["Relative humidity",o.humidity==null?"—":f(o.humidity,0)+"%"],["Wind",o.windMph==null?"—":f(o.windMph)+" mph"],
  ["Wind gust",o.gustMph==null?"—":f(o.gustMph)+" mph"],["Pressure",o.pressureInHg==null?"—":f(o.pressureInHg,2)+" inHg"],
  ["Visibility",o.visibilityMi==null?"—":f(o.visibilityMi,1)+" mi"],["Precipitation (last hour)",o.precipIn==null?"—":f(o.precipIn,2)+" in"],
- ["Forecast CDD (24h)*",f(d.dd.cdd)],["Forecast HDD (24h)*",f(d.dd.hdd)]
+ ["Forecast CDD (24h)*",f(d.dd?.cdd)],["Forecast HDD (24h)*",f(d.dd?.hdd)]
  ];
  el.innerHTML=items.map(([label,value])=>`<div class="metric-chip"><div class="metric-label">${safe(label)}</div><div class="metric-value">${safe(value)}</div></div>`).join("");
 }
@@ -505,6 +530,7 @@ function renderModelInfo(d,r){
  el.innerHTML=`<div class="tile-subdata">REGION ${safe(r.name)} · COORDINATES ${r.lat.toFixed(3)}, ${r.lon.toFixed(3)} · NWS OFFICE ${safe(d.pointOffice||"—")}</div>
  <div class="tile-subdata">FORECAST UPDATED ${safe(fmtDate(d.forecastUpdated))} · STATIONS FOUND ${d.stationCount} · GRID FIELDS AVAILABLE ${present.length}</div>
  <div class="tile-subdata">GRID FIELD KEYS: ${safe(present.join(", ")||"Unavailable")}</div>
+ ${d.errors?.length?`<div class="tile-subdata" style="margin-top:8px;color:#fbbf24">PARTIAL DATA / API NOTES: ${safe(d.errors.join(" · "))}</div>`:""}
  <div class="tile-subdata" style="margin-top:8px">The NWS point forecast is an operational forecast product; it is not labeled here as raw GFS or ECMWF output. Direct GFS/GEFS comparison requires GRIB/model ingestion and validation.</div>`;
 }
 function renderHistory(){
@@ -513,83 +539,29 @@ function renderHistory(){
  if(!regionHistory.length){el.innerHTML='<div class="empty-msg">History starts after successful data refreshes in this browser. Earlier history is not backfilled.</div>';return;}
  el.innerHTML=regionHistory.map(x=>`<div class="log-row"><div style="color:#94a3b8;min-width:140px">${safe(fmtDate(x.ts))}</div><div style="flex:1;color:#f1f5f9">Temperature ${x.tempF==null?"—":f(x.tempF)+"°F"}</div><div style="color:#94a3b8">CDD ${f(x.cdd)} · HDD ${f(x.hdd)}</div></div>`).join("");
 }
-async function refreshAll() {
-    if (busy) return;
-    busy = true;
-
-    const status = $("data-status");
-    const badge = $("connection-badge");
-
-    try {
-        if (status) {
-            status.textContent =
-                "NOAA/NWS · Refreshing forecast and station data…";
-        }
-
-        const results = await Promise.allSettled(
-            regions.map(loadRegion)
-        );
-
-        const failed = results.filter(
-            result => result.status === "rejected"
-        );
-
-        lastRefresh = new Date();
-
-        renderTiles();
-        renderRegionSelect();
-        renderDetail();
-
-        if (failed.length === 0) {
-            if (status) {
-                status.textContent =
-                    `NOAA/NWS · ${regions.length} regions updated · ` +
-                    `${lastRefresh.toLocaleString()} · ` +
-                    "Auto-refresh every 10 min";
-            }
-
-            if (badge) {
-                badge.textContent = "NOAA DATA CONNECTED";
-            }
-        } else {
-            if (status) {
-                status.textContent =
-                    `NOAA/NWS · ${regions.length - failed.length}/` +
-                    `${regions.length} regions updated · ` +
-                    "Some data unavailable; see browser console.";
-            }
-
-            if (badge) {
-                badge.textContent =
-                    failed.length === regions.length
-                        ? "CONNECTION ERROR"
-                        : "PARTIAL DATA";
-            }
-        }
-
-        results.forEach((result, index) => {
-            if (result.status === "rejected") {
-                console.error(
-                    "Region failed:",
-                    regions[index]?.name,
-                    result.reason
-                );
-            }
-        });
-    } catch (error) {
-        console.error("Dashboard refresh failed:", error);
-
-        if (status) {
-            status.textContent =
-                "Refresh failed. Check the browser console.";
-        }
-
-        if (badge) {
-            badge.textContent = "REFRESH ERROR";
-        }
-    } finally {
-        busy = false;
-    }
+async function refreshAll(){
+ if(busy)return;
+ busy=true;
+ const status=$("data-status"), badge=$("connection-badge");
+ if(status)status.textContent="NOAA/NWS · Refreshing forecasts and station observations (retrying temporary outages)…";
+ try{
+  const results=await Promise.allSettled(regions.map(loadRegion));
+  const failed=results.filter(x=>x.status==="rejected");
+  const records=regions.map(r=>dataByRegion[r.id]).filter(Boolean);
+  const partial=records.some(d=>d.partial);
+  lastRefresh=new Date();
+  renderTiles();renderRegionSelect();renderDetail();
+  if(status){
+   if(failed.length===0&&!partial)status.textContent=`NOAA/NWS · ${regions.length} regions updated · ${lastRefresh.toLocaleString()} · Auto-refresh every 10 min`;
+   else status.textContent=`NOAA/NWS · ${regions.length-failed.length}/${regions.length} regions returned data; some endpoints failed. Details are shown on each region tile.`;
+  }
+  if(badge)badge.textContent=failed.length===regions.length?(records.length?"PARTIAL NOAA DATA":"NOAA CONNECTION ERROR"):(failed.length||partial?"PARTIAL DATA":"NOAA DATA CONNECTED");
+  results.forEach((x,i)=>{if(x.status==="rejected")console.error("Region failed",regions[i]?.name,x.reason);});
+ }catch(err){
+  console.error("Dashboard refresh error",err);
+  if(status)status.textContent="NOAA/NWS · Refresh failed: "+(err?.message||String(err));
+  if(badge)badge.textContent="REFRESH ERROR";
+ }finally{busy=false;}
 }
 function addRegion(){
  const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
