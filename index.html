@@ -513,17 +513,83 @@ function renderHistory(){
  if(!regionHistory.length){el.innerHTML='<div class="empty-msg">History starts after successful data refreshes in this browser. Earlier history is not backfilled.</div>';return;}
  el.innerHTML=regionHistory.map(x=>`<div class="log-row"><div style="color:#94a3b8;min-width:140px">${safe(fmtDate(x.ts))}</div><div style="flex:1;color:#f1f5f9">Temperature ${x.tempF==null?"—":f(x.tempF)+"°F"}</div><div style="color:#94a3b8">CDD ${f(x.cdd)} · HDD ${f(x.hdd)}</div></div>`).join("");
 }
-async function refreshAll(){
- if(busy)return;busy=true;$("data-status").textContent="NOAA/NWS · Refreshing forecast and station data…";
- const results=await Promise.allSettled(regions.map(loadRegion));
- const failed=results.filter(x=>x.status==="rejected");
- lastRefresh=new Date();
- renderTiles();renderRegionSelect();renderDetail();
- const badge=$("connection-badge");
- if(failed.length===0){$("data-status").textContent=`NOAA/NWS · ${regions.length} regions updated · ${lastRefresh.toLocaleString()} · Auto-refresh every 10 min`;badge.textContent="NOAA DATA CONNECTED";}
- else{$("data-status").textContent=`NOAA/NWS · ${regions.length-failed.length}/${regions.length} regions updated · Some data unavailable; see browser console.`;badge.textContent=results.every(x=>x.status==="rejected")?"CONNECTION ERROR":"PARTIAL DATA";}
- results.forEach((x,i)=>{if(x.status==="rejected")console.error("Region failed",regions[i]?.name,x.reason);});
- busy=false;
+async function refreshAll() {
+    if (busy) return;
+    busy = true;
+
+    const status = $("data-status");
+    const badge = $("connection-badge");
+
+    try {
+        if (status) {
+            status.textContent =
+                "NOAA/NWS · Refreshing forecast and station data…";
+        }
+
+        const results = await Promise.allSettled(
+            regions.map(loadRegion)
+        );
+
+        const failed = results.filter(
+            result => result.status === "rejected"
+        );
+
+        lastRefresh = new Date();
+
+        renderTiles();
+        renderRegionSelect();
+        renderDetail();
+
+        if (failed.length === 0) {
+            if (status) {
+                status.textContent =
+                    `NOAA/NWS · ${regions.length} regions updated · ` +
+                    `${lastRefresh.toLocaleString()} · ` +
+                    "Auto-refresh every 10 min";
+            }
+
+            if (badge) {
+                badge.textContent = "NOAA DATA CONNECTED";
+            }
+        } else {
+            if (status) {
+                status.textContent =
+                    `NOAA/NWS · ${regions.length - failed.length}/` +
+                    `${regions.length} regions updated · ` +
+                    "Some data unavailable; see browser console.";
+            }
+
+            if (badge) {
+                badge.textContent =
+                    failed.length === regions.length
+                        ? "CONNECTION ERROR"
+                        : "PARTIAL DATA";
+            }
+        }
+
+        results.forEach((result, index) => {
+            if (result.status === "rejected") {
+                console.error(
+                    "Region failed:",
+                    regions[index]?.name,
+                    result.reason
+                );
+            }
+        });
+    } catch (error) {
+        console.error("Dashboard refresh failed:", error);
+
+        if (status) {
+            status.textContent =
+                "Refresh failed. Check the browser console.";
+        }
+
+        if (badge) {
+            badge.textContent = "REFRESH ERROR";
+        }
+    } finally {
+        busy = false;
+    }
 }
 function addRegion(){
  const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
