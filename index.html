@@ -523,7 +523,12 @@ function renderTiles(){
   </article>`;
  }).join("");
 }
-window.selectRegion=id=>{activeRegion=id;$("hub-select").value=id;renderDetail();};
+window.selectRegion=id=>{
+ activeRegion=id;
+ $("hub-select").value=id;
+ renderDetail();
+ $("hourly-forecast").scrollIntoView({behavior:"smooth",block:"start"});
+};
 function renderDetail(){
  activeRegion=$("hub-select").value;
  const d=dataByRegion[activeRegion], r=regions.find(x=>x.id===activeRegion);
