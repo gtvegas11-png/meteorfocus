@@ -427,13 +427,49 @@ async function loadRegion(region){
  const daily=dailyR.status==="fulfilled"?(props(dailyR.value).periods||[]):[];
  const stations=stationsR.status==="fulfilled"?(stationsR.value.features||[]):[];
  let obs=null, stationName=null, stationError=null;
- if(stations.length){
-  const first=stations[0], stationUrl=first.id||first["@id"];
-  stationName=props(first).name||null;
-  if(stationUrl){
-   try{const ob=await nws(`${stationUrl.replace(/\/$/,"")}/observations/latest`);obs=ob.features?observationShape(ob.features[0],stationName):ob.properties?observationShape(ob,stationName):null;}
-   catch(err){stationError=err.message;console.warn("Station observation unavailable",region.name,err);}
+ if(stations.length)for (const station of stations.slice(0, 5)) {
+  const stationProps = props(station);
+  const stationUrl = station.id || station["@id"];
+  const candidateName = stationProps.name || null;
+
+  if (!stationUrl) continue;
+
+  try {
+    const ob = await nws(
+      `${stationUrl.replace(/\/$/, "")}/observations/latest`
+    );
+
+    const candidate = ob.features
+      ? observationShape(ob.features[0], candidateName)
+      : ob.properties
+      ? observationShape(ob, candidateName)
+      : null;
+
+    if (!candidate) continue;
+
+    if (!obs) obs = candidate;
+    else {
+      if (obs.gustMph == null && candidate.gustMph != null) {
+        obs.gustMph = candidate.gustMph;
+      }
+
+      if (
+        obs.precipitationLastHour == null &&
+        candidate.precipitationLastHour != null
+      ) {
+        obs.precipitationLastHour = candidate.precipitationLastHour;
+      }
+    }
+
+    if (
+      obs.gustMph != null &&
+      obs.precipitationLastHour != null
+    ) break;
+
+  } catch (err) {
+    console.warn("Station observation unavailable", region.name, err);
   }
+}
  }
  const alerts=alertsR.status==="fulfilled"?(alertsR.value.features||[]):[];
  const grid=gridR.status==="fulfilled"&&gridR.value?props(gridR.value):null;
