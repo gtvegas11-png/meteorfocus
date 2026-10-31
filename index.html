@@ -469,7 +469,6 @@ async function loadRegion(region){
   } catch (err) {
     console.warn("Station observation unavailable", region.name, err);
   }
-}
  }
  const alerts=alertsR.status==="fulfilled"?(alertsR.value.features||[]):[];
  const grid=gridR.status==="fulfilled"&&gridR.value?props(gridR.value):null;
