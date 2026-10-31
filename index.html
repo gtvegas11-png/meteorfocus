@@ -468,7 +468,14 @@ function renderTiles(){
    <div class="tile-title">${safe(r.name)}</div>
    <div class="tile-subdata">${label}: ${temp===null?"—":f(temp)+"°F"} ${o?.description? "· "+safe(o.description):p?"· "+safe(p.shortForecast||""):""}</div>
    <div class="flex-row-box">
-    <div><div class="metric-label">24-HOUR FORECAST CDD*</div><div class="big-metric">${f(d?.dd?.cdd)}</div><div class="tile-subdata">HDD: ${f(d?.dd?.hdd)}</div></div>
+    <div><div class="metric-label">24-HOUR FORECAST CDD*</div><div class=<div>
+  <div class="metric-label">24-HOUR FORECAST CDD*</div>
+  <div class="big-metric">${f(d?.dd?.cdd)}</div>
+</div>
+<div style="text-align:right">
+  <div class="metric-label">24-HOUR FORECAST HDD*</div>
+  <div class="big-metric">${f(d?.dd?.hdd)}</div>
+</div>
     <div style="text-align:right"><div class="metric-label">WIND / GUST</div><div class="delta-val text-neutral" style="font-size:16px">${o?.windMph==null?"—":f(o.windMph)+" mph"}</div><div class="tile-subdata">${o?.gustMph==null?"Gust —":"Gust "+f(o.gustMph)+" mph"}</div></div>
    </div>
    <div class="tile-subdata" style="margin-top:12px">Station: ${safe(d?.stationName||o?.station||"not available")} · Active alerts: ${alerts}</div>
