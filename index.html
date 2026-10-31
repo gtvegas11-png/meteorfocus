@@ -469,20 +469,6 @@ for (const station of stations.slice(0, 5)) {
     console.warn("Station observation unavailable", region.name, err);
   }
 }
-    else {
-  if (obs.gustMph == null && candidate.gustMph != null) {
-    obs.gustMph = candidate.gustMph;
-  }
-
-  if (obs.precipIn == null && candidate.precipIn != null) {
-    obs.precipIn = candidate.precipIn;
-  }
-}
-
-    if (
-  obs.gustMph != null &&
-  obs.precipIn != null
-) break;
 
   } catch (err) {
     console.warn("Station observation unavailable", region.name, err);
