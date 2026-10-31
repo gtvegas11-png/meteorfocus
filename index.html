@@ -449,17 +449,9 @@ async function loadRegion(region){
 
     if (!obs) obs = candidate;
     else {
-      if (obs.gustMph == null && candidate.gustMph != null) {
-        obs.gustMph = candidate.gustMph;
-      }
-
-      if (
-        obs.precipitationLastHour == null &&
-        candidate.precipitationLastHour != null
-      ) {
-        obs.precipitationLastHour = candidate.precipitationLastHour;
-      }
-    }
+     if (obs.precipIn == null && candidate.precipIn != null) {
+  obs.precipIn = candidate.precipIn;
+}
 
     if (
       obs.gustMph != null &&
