@@ -454,9 +454,9 @@ async function loadRegion(region){
 }
 
     if (
-      obs.gustMph != null &&
-      obs.precipitationLastHour != null
-    ) break;
+  obs.gustMph != null &&
+  obs.precipIn != null
+) break;
 
   } catch (err) {
     console.warn("Station observation unavailable", region.name, err);
