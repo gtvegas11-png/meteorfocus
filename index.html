@@ -447,7 +447,10 @@ async function loadRegion(region){
 
     if (!candidate) continue;
 
-    if (!obs) obs = candidate;
+    if (!obs) {
+  obs = candidate;
+  stationName = candidateName || candidate.station || "Reporting station";
+}
     else {
      if (obs.precipIn == null && candidate.precipIn != null) {
   obs.precipIn = candidate.precipIn;
