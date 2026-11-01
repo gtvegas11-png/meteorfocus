@@ -540,9 +540,13 @@ function renderTiles(){
   const d=dataByRegion[r.id], o=d?.obs, p=d?.hourly?.[0], temp=o?.tempF??(p?periodF(p):null);
   const label=o?.tempF!==null&&o?.tempF!==undefined?"LATEST STATION OBSERVATION":"NEXT HOURLY FORECAST";
   const alerts=d?.alerts?.length??0;
+  const precip=gridPrecipitation(d?.grid);
+  const precipCoverage=precip?Math.round(precip.coveredHours/168*100):0;
+  const precipStatus=!precip?"UNAVAILABLE":precipCoverage>=95?"FULL":"PARTIAL";
   return `<article class="tile-card ${d?"updated":""}">
    <div class="tile-meta">NOAA/NWS · ${safe(r.market)} · ${d?(d.partial?"PARTIAL DATA":"UPDATED")+" "+safe(fmtDate(d.fetchedAt,{hour:"numeric",minute:"2-digit"})):"WAITING FOR DATA"}</div>
    <div class="tile-title">${safe(r.name)}</div>
+   <div class="tile-subdata">PRECIPITATION DATA: ${precipStatus} · ${precip?precipCoverage+"% COVERAGE":"NO GRID DATA"}</div>
    <div class="tile-subdata">${label}: ${temp===null?"—":f(temp)+"°F"} ${o?.description? "· "+safe(o.description):p?"· "+safe(p.shortForecast||""):""}</div>
    <div class="flex-row-box">
     <div>
