@@ -620,13 +620,13 @@ function renderModelInfo(d,r){
  const grid=d.grid||{};
  const precip=gridPrecipitation(grid);
  const coverage=precip?Math.round(precip.coveredHours/168*100):0;
+ const precipLabel=precip?(coverage>=95?"7-DAY TOTAL":"PARTIAL — NOT A FULL 7-DAY TOTAL"):"UNAVAILABLE";
  const fields=["temperature","dewpoint","relativeHumidity","windSpeed","windGust","skyCover","probabilityOfPrecipitation","quantitativePrecipitation","snowfallAmount","iceAccumulation","pressure","visibility","apparentTemperature"];
  const present=fields.filter(k=>Array.isArray(grid[k]?.values));
  el.innerHTML=`<div class="tile-subdata">REGION ${safe(r.name)} · COORDINATES ${r.lat.toFixed(3)}, ${r.lon.toFixed(3)} · NWS OFFICE ${safe(d.pointOffice||"—")}</div>
  <div class="tile-subdata">FORECAST UPDATED ${safe(fmtDate(d.forecastUpdated))} · STATIONS FOUND ${d.stationCount} · GRID FIELDS AVAILABLE ${present.length}</div>
  <div class="tile-subdata">GRID FIELD KEYS: ${safe(present.join(", ")||"Unavailable")}</div>
-<div class="tile-subdata">MODEL PRECIPITATION (7-DAY WINDOW): ${precip?f(precip.totalIn,2)+" in":"Unavailable"} · FORECAST COVERAGE: ${precip?.coveredHours??0}/168 hours (${coverage}%) · PERIODS: ${precip?.periods??0}</div> ${d.errors?.length?`<div class="tile-subdata" style="margin-top:8px;color:#fbbf24">PARTIAL DATA / API NOTES: ${safe(d.errors.join(" · "))}</div>`:""}
- <div class="tile-subdata" style="margin-top:8px">The NWS point forecast is an operational forecast product; it is not labeled here as raw GFS or ECMWF output. Direct GFS/GEFS comparison requires GRIB/model ingestion and validation.</div>`;
+<div class="tile-subdata">MODEL PRECIPITATION: ${precip?f(precip.totalIn,2)+" in":"Unavailable"} · ${precipLabel} · COVERAGE: ${precip?.coveredHours??0}/168 hours (${coverage}%) · PERIODS: ${precip?.periods??0}</div> <div class="tile-subdata" style="margin-top:8px">The NWS point forecast is an operational forecast product; it is not labeled here as raw GFS or ECMWF output. Direct GFS/GEFS comparison requires GRIB/model ingestion and validation.</div>`;
 }
 function renderHistory(){
  const regionHistory=history.filter(x=>x.id===activeRegion).slice(-48).reverse();
