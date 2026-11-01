@@ -403,13 +403,28 @@ function degreeDays(hourly){
 
 function gridPrecipitation(grid){
  const values=grid?.quantitativePrecipitation?.values||[];
- const valid=values.filter(v=>n(v.value)!==null);
+ const now=Date.now();
+ const end=now+7*24*60*60*1000;
+
+ const valid=values.filter(v=>{
+  if(n(v.value)===null||!v.validTime)return false;
+  const match=v.validTime.match(/^(.*)\/(.*)$/);
+  if(!match)return false;
+  const start=Date.parse(match[1]);
+  const duration=match[2];
+  const hours=duration.startsWith("PT")?parseFloat(duration.slice(2)):null;
+  if(!Number.isFinite(start)||!Number.isFinite(hours))return false;
+  const finish=start+hours*60*60*1000;
+  return start>=now&&finish<=end;
+ });
+
  if(!valid.length)return null;
+
  const totalMm=valid.reduce((sum,v)=>sum+v.value,0);
  return {
   totalIn:totalMm/25.4,
   periods:valid.length,
-  unit:grid.quantitativePrecipitation.uom
+  hours:168
  };
 }
 function getObsValue(p,key){const x=p?.[key];return x&&n(x.value)!==null?x.value:null}
