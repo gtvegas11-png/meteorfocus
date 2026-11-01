@@ -446,6 +446,16 @@ for (const station of stations.slice(0, 20)) {
       ? observationShape(ob, candidateName)
       : null;
 
+    const observationProps = props(ob.features?.[0] || ob);
+
+    console.log("NOAA STATION DIAGNOSTIC", {
+      region: region.name,
+      station: candidateName,
+      observedAt: observationProps.timestamp,
+      windGust: observationProps.windGust,
+      precipitationLastHour: observationProps.precipitationLastHour
+    });
+
     if (!candidate) continue;
 
     if (!obs) {
