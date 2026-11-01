@@ -407,7 +407,7 @@ function observationShape(feature, stationName){
  const rh=getObsValue(p,"relativeHumidity"), pressure=getObsValue(p,"barometricPressure"), vis=getObsValue(p,"visibility"), precip=getObsValue(p,"precipitationLastHour");
  return {station:p.station||stationName||"Reporting station",description:p.textDescription||"Conditions unavailable",
  tempF:temp===null?null:cToF(temp),dewF:dew===null?null:cToF(dew),humidity:rh,
- windMph:wind===null?null:wind*.621371,gustMph:gust===null?null:gust*.621371,
+ windMph:wind===null?null:wind*.621371,gustMph:gust===null?null:toMph(gust,p.windGust?.unitCode?.split(":").pop()?.replace("-1","")),
  pressureInHg:pressure===null?null:pressure/3386.389,visibilityMi:vis===null?null:vis/1609.344,
  precipIn:precip===null?null:precip/25.4,observedAt:p.timestamp||null,quality:p.qualityControl||[]};
 }
