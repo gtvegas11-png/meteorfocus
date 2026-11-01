@@ -428,7 +428,7 @@ async function loadRegion(region){
  const stations=stationsR.status==="fulfilled"?(stationsR.value.features||[]):[];
 let obs = null, stationName = null, stationError = null;
 
-for (const station of stations.slice(0, 10)) {
+for (const station of stations.slice(0, 20)) {
   const stationProps = props(station);
   const stationUrl = station.id || station["@id"];
   const candidateName = stationProps.name || null;
