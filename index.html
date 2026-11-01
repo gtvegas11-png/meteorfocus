@@ -400,6 +400,18 @@ function degreeDays(hourly){
  return {hdd:temps.length?temps.reduce((s,t)=>s+Math.max(0,65-t)/24,0):null,
  cdd:temps.length?temps.reduce((s,t)=>s+Math.max(0,t-65)/24,0):null,count:temps.length};
 }
+
+function gridPrecipitation(grid){
+ const values=grid?.quantitativePrecipitation?.values||[];
+ const valid=values.filter(v=>n(v.value)!==null);
+ if(!valid.length)return null;
+ const totalMm=valid.reduce((sum,v)=>sum+v.value,0);
+ return {
+  totalIn:totalMm/25.4,
+  periods:valid.length,
+  unit:grid.quantitativePrecipitation.uom
+ };
+}
 function getObsValue(p,key){const x=p?.[key];return x&&n(x.value)!==null?x.value:null}
 function observationShape(feature, stationName){
  const p=props(feature);
