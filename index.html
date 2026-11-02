@@ -368,6 +368,7 @@ let activeRegion = regions[0]?.id;
 let history = loadHistory();
 let lastRefresh = null;
 let busy = false;
+let climateNormals = null;
 
 function loadRegions(){
  try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(Array.isArray(saved)&&saved.length) return saved; } catch(e){}
