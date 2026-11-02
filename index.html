@@ -773,6 +773,7 @@ $("refresh-btn")?.addEventListener("click",refreshAll); // Optional: the refresh
 $("add-region-btn")?.addEventListener("click",addRegion);
 $("export-btn")?.addEventListener("click",exportCSV);
 $("clear-history-btn")?.addEventListener("click",()=>{if(confirm("Clear saved forecast history for all regions in this browser?")){history=[];saveHistory();renderHistory();}});
+loadClimateNormals();
 renderRegionSelect();
 $("region-count").textContent=regions.length;
 refreshAll();
