@@ -525,7 +525,75 @@ let history = loadHistory();
 let lastRefresh = null;
 let busy = false;
 let climateNormals = null;
+/* METEOFOCUS COUNTY MAP */
 
+let countyMap = null;
+let countyGeoLayer = null;
+
+async function initializeCountyMap(){
+  const mapElement = document.getElementById("county-weather-map");
+  const statusElement = document.getElementById("county-map-status");
+
+  if(!mapElement || !window.L || !window.topojson){
+    if(statusElement) statusElement.textContent = "MAP LIBRARY UNAVAILABLE";
+    return;
+  }
+
+  if(countyMap) return;
+
+  countyMap = L.map("county-weather-map", {
+    center: [39.5, -98.35],
+    zoom: 4,
+    minZoom: 3,
+    maxZoom: 9
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: "&copy; OpenStreetMap &copy; CARTO",
+    maxZoom: 19
+  }).addTo(countyMap);
+
+  try {
+    if(statusElement) statusElement.textContent = "LOADING COUNTY BOUNDARIES";
+
+    const response = await fetch(
+      "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json"
+    );
+
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const topology = await response.json();
+    const counties = topojson.feature(
+      topology,
+      topology.objects.counties
+    );
+
+    countyGeoLayer = L.geoJSON(counties, {
+      style: {
+        color: "#42d9ed",
+        weight: 0.45,
+        opacity: 0.65,
+        fillColor: "#142236",
+        fillOpacity: 0.35
+      },
+      onEachFeature: (feature, layer) => {
+        const fips = String(feature.id).padStart(5, "0");
+        layer.bindTooltip(`County FIPS: ${fips}`);
+      }
+    }).addTo(countyMap);
+
+    if(statusElement){
+      statusElement.textContent =
+        `${counties.features.length.toLocaleString()} COUNTY BOUNDARIES LOADED`;
+    }
+
+    setTimeout(() => countyMap.invalidateSize(), 300);
+
+  } catch(error) {
+    console.error("County map failed:", error);
+    if(statusElement) statusElement.textContent = "COUNTY DATA UNAVAILABLE";
+  }
+}
 async function loadClimateNormals(){
   try{
     const response = await fetch("./climate_normals.json");
@@ -962,6 +1030,7 @@ $("refresh-btn")?.addEventListener("click",refreshAll); // Optional: the refresh
 $("add-region-btn")?.addEventListener("click",addRegion);
 $("export-btn")?.addEventListener("click",exportCSV);
 $("clear-history-btn")?.addEventListener("click",()=>{if(confirm("Clear saved forecast history for all regions in this browser?")){history=[];saveHistory();renderHistory();}});
+initializeCountyMap();
 loadClimateNormals();
 renderRegionSelect();
 $("region-count").textContent=regions.length;
