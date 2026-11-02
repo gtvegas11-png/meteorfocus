@@ -538,7 +538,7 @@ for (const station of stations.slice(0, 20)) {
  const day=p.startTime?.slice(0,10);
  if(!day)return groups;
  if(!groups[day])groups[day]=[];
- groups[day].push(periodF(p));
+ groups[day].push(p);
  return groups;
 },{})).map(temps=>degreeDays(temps));
  const errors=[];
@@ -633,6 +633,10 @@ function renderTiles(){
      <div class="delta-val text-neutral" style="font-size:16px">${o?.windMph==null?"—":f(o.windMph)+" mph"}</div>
      <div class="tile-subdata">${o?.gustMph==null?"Gust —":"Gust "+f(o.gustMph)+" mph"}</div>
     </div>
+   </div>
+      <div class="tile-subdata" style="margin-top:10px">
+    DAILY HDD / CDD:
+    ${d?.dailyDD?.[0]?`HDD ${f(d.dailyDD[0].hdd)} · CDD ${f(d.dailyDD[0].cdd)}`:"—"}
    </div>
    <div class="tile-subdata" style="margin-top:12px">Station: ${safe(d?.stationName||o?.station||"not available")} · Active alerts: ${alerts}</div>
    ${d?.mainError?`<div class="tile-subdata" style="margin-top:6px;color:#fbbf24">Forecast issue: ${safe(d.mainError)}</div>`:""}
