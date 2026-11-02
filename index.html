@@ -388,7 +388,7 @@ body {
 
     <select id="county-map-layer"
       style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;font-family:inherit;">
-      <option value="temperature">Temperature Anomaly</option>
+      <option value="temperature">Observed Temperature</option>
       <option value="hdd">Heating Degree Days</option>
       <option value="cdd">Cooling Degree Days</option>
       <option value="precipitation">Precipitation</option>
@@ -1025,13 +1025,101 @@ function exportCSV(){
  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
  a.href=url;a.download=`meteofocus-${activeRegion}-history.csv`;a.click();URL.revokeObjectURL(url);
 }
+/* METEOFOCUS COUNTY OBSERVED DATA */
+
+let countyWeatherData = null;
+let countySelectedDate = "2026-10-25";
+
+async function loadCountyWeatherData(){
+  const statusElement = document.getElementById("county-map-status");
+
+  try {
+    if(statusElement){
+      statusElement.textContent = "LOADING COUNTY WEATHER DATA";
+    }
+
+    const response = await fetch(
+      "./county_observed_october_2026.json"
+    );
+
+    if(!response.ok){
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    countyWeatherData = await response.json();
+
+    updateCountyMapLayer();
+
+    if(statusElement){
+      statusElement.textContent =
+        `${countyWeatherData.county_count.toLocaleString()} COUNTIES · OBSERVED THROUGH OCT 25, 2026 · PRELIMINARY`;
+    }
+
+  } catch(error) {
+    console.error("County weather data failed:", error);
+
+    if(statusElement){
+      statusElement.textContent = "COUNTY WEATHER DATA UNAVAILABLE";
+    }
+  }
+}
+
+function updateCountyMapLayer(){
+  if(!countyGeoLayer || !countyWeatherData) return;
+
+  const selectedLayer =
+    document.getElementById("county-map-layer").value;
+
+  countyGeoLayer.setStyle(feature => {
+    const fips = String(feature.id).padStart(5, "0");
+
+    const county = countyWeatherData.counties[fips];
+    const daily = county?.daily?.[countySelectedDate];
+
+    let value = null;
+
+    if(daily){
+      if(selectedLayer === "temperature") value = daily.temp_f;
+      if(selectedLayer === "hdd") value = daily.hdd;
+      if(selectedLayer === "cdd") value = daily.cdd;
+    }
+
+    if(value === null || value === undefined){
+      return {
+        fillColor: "#263747",
+        fillOpacity: 0.25
+      };
+    }
+
+    let fillColor = "#42d9ed";
+
+    if(selectedLayer === "temperature"){
+      fillColor = value < 40 ? "#3978c5" :
+                  value < 55 ? "#42b8d5" :
+                  value < 70 ? "#e2c65b" :
+                  value < 85 ? "#ed9145" : "#d94d4d";
+    } else {
+      fillColor = value < 5 ? "#42d9ed" :
+                  value < 15 ? "#e2c65b" :
+                  value < 25 ? "#ed9145" : "#d94d4d";
+    }
+
+    return {
+      fillColor,
+      fillOpacity: 0.75
+    };
+  });
+}
+document.getElementById("county-map-layer")
+  .addEventListener("change", updateCountyMapLayer);
 $("hub-select")?.addEventListener("change",renderDetail);
 $("refresh-btn")?.addEventListener("click",refreshAll); // Optional: the refresh button is not present in this page layout.
 $("add-region-btn")?.addEventListener("click",addRegion);
 $("export-btn")?.addEventListener("click",exportCSV);
 $("clear-history-btn")?.addEventListener("click",()=>{if(confirm("Clear saved forecast history for all regions in this browser?")){history=[];saveHistory();renderHistory();}});
-window.addEventListener("load", () => {
-  initializeCountyMap();
+window.addEventListener("load", async () => {
+  await initializeCountyMap();
+  await loadCountyWeatherData();
 });
 loadClimateNormals();
 renderRegionSelect();
