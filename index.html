@@ -535,13 +535,13 @@ for (const station of stations.slice(0, 20)) {
  const grid=gridR.status==="fulfilled"&&gridR.value?props(gridR.value):null;
  const dd=degreeDays(hourly.slice(0,24));
  const dailyDD=Object.values(hourly.reduce((groups,p)=>{
- const sevenDayDD=dailyDD.slice(0,7);
  const day=p.startTime?.slice(0,10);
  if(!day)return groups;
  if(!groups[day])groups[day]=[];
  groups[day].push(p);
  return groups;
 },{})).map(temps=>degreeDays(temps));
+ const sevenDayDD=dailyDD.slice(0,7);
  const errors=[];
  [["hourly forecast",hourlyR],["daily forecast",dailyR],["station list",stationsR],["alerts",alertsR],["grid data",gridR]].forEach(([label,result])=>{if(result.status==="rejected")errors.push(`${label}: ${result.reason?.message||result.reason}`);});
  if(stationError)errors.push(`latest station observation: ${stationError}`);
