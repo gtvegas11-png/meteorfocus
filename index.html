@@ -377,6 +377,37 @@ body {
 
         </div>
     </div>
+    <h2 class="section-label">U.S. COUNTY WEATHER INTELLIGENCE</h2>
+
+<div class="tile-card" style="padding:16px;margin-bottom:24px;">
+
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+
+    <span class="metric-label">MAP DATA LAYER</span>
+
+    <select id="county-map-layer"
+      style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;font-family:inherit;">
+      <option value="temperature">Temperature Anomaly</option>
+      <option value="hdd">Heating Degree Days</option>
+      <option value="cdd">Cooling Degree Days</option>
+      <option value="precipitation">Precipitation</option>
+    </select>
+
+    <span id="county-map-status" class="tile-subdata">
+      COUNTY BOUNDARIES INITIALIZING
+    </span>
+
+  </div>
+
+  <div id="county-weather-map"
+    style="height:560px;width:100%;border-radius:7px;background:#0b1421;">
+  </div>
+
+  <div class="tile-subdata" style="margin-top:12px;">
+    COUNTY-LEVEL WEATHER DATA · UNITED STATES
+  </div>
+
+</div>
     <h2 class="section-label">U.S. WEATHER MONITORING MAP</h2>
 
 <div class="tile-card" style="padding:12px;margin-bottom:24px;">
