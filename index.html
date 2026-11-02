@@ -393,7 +393,11 @@ body {
       <option value="cdd">Cooling Degree Days</option>
       <option value="precipitation">Precipitation</option>
     </select>
+    <span class="metric-label">OBSERVATION DATE</span>
 
+<select id="county-map-date"
+  style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;font-family:inherit;">
+</select>
     <span id="county-map-status" class="tile-subdata">
       COUNTY BOUNDARIES INITIALIZING
     </span>
@@ -1046,9 +1050,10 @@ async function loadCountyWeatherData(){
       throw new Error(`HTTP ${response.status}`);
     }
 
-    countyWeatherData = await response.json();
+     countyWeatherData = await response.json();
 
-    updateCountyMapLayer();
+     initializeCountyDateSelector();
+     updateCountyMapLayer();
 
     if(statusElement){
       statusElement.textContent =
@@ -1063,7 +1068,30 @@ async function loadCountyWeatherData(){
     }
   }
 }
+function initializeCountyDateSelector(){
+  const dateSelect = document.getElementById("county-map-date");
 
+  if(!dateSelect || !countyWeatherData) return;
+
+  const availableDates = new Set();
+
+  Object.values(countyWeatherData.counties).forEach(county => {
+    Object.keys(county.daily || {}).forEach(day => {
+      availableDates.add(day);
+    });
+  });
+
+  dateSelect.innerHTML = "";
+
+  [...availableDates].sort().forEach(day => {
+    const option = document.createElement("option");
+    option.value = day;
+    option.textContent = day;
+    dateSelect.appendChild(option);
+  });
+
+  dateSelect.value = countySelectedDate;
+}
 function updateCountyMapLayer(){
   if(!countyGeoLayer || !countyWeatherData) return;
 
@@ -1118,6 +1146,11 @@ function updateCountyMapLayer(){
 }
 document.getElementById("county-map-layer")
   .addEventListener("change", updateCountyMapLayer);
+document.getElementById("county-map-date")
+  .addEventListener("change", event => {
+    countySelectedDate = event.target.value;
+    updateCountyMapLayer();
+  });
 $("hub-select")?.addEventListener("change",renderDetail);
 $("refresh-btn")?.addEventListener("click",refreshAll); // Optional: the refresh button is not present in this page layout.
 $("add-region-btn")?.addEventListener("click",addRegion);
