@@ -220,7 +220,57 @@ button:hover { border-color:#00ff66; color:#fff; }
 #hub-select { max-width:100%; }
 @media(max-width:800px){ .region-form { grid-template-columns:1fr 1fr; } .region-form input:first-child { grid-column:span 2; } .toolbar { align-items:flex-start; } }
 @media(max-width:520px){ .region-form { grid-template-columns:1fr; } .region-form input:first-child { grid-column:auto; } .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .metric-value {font-size:18px;} .wiki-btn { padding:6px 8px; } }
+/* METEOFOCUS INSTITUTIONAL HUD */
+:root {
+  --hud-bg: #080d16;
+  --hud-panel: #101a29;
+  --hud-panel-alt: #142236;
+  --hud-border: #263b52;
+  --hud-text: #e6eef8;
+  --hud-muted: #8da3ba;
+  --hud-cyan: #42d9ed;
+  --hud-green: #38d996;
+  --hud-amber: #f3bd58;
+}
 
+body {
+  background: var(--hud-bg);
+  color: var(--hud-text);
+}
+
+header, .header, .topbar {
+  border-bottom: 1px solid var(--hud-border);
+}
+
+.card, .tile, .panel, .region-card {
+  background: linear-gradient(145deg, var(--hud-panel), #0c1421);
+  border: 1px solid var(--hud-border);
+  border-radius: 10px;
+  box-shadow: 0 5px 18px rgba(0,0,0,.22);
+}
+
+.metric-label, .label {
+  color: var(--hud-muted);
+  letter-spacing: .09em;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+button, select {
+  border-color: var(--hud-border);
+}
+
+button:hover {
+  border-color: var(--hud-cyan);
+}
+
+.status, .connected {
+  color: var(--hud-green);
+}
+
+h1, h2, h3 {
+  letter-spacing: .025em;
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
