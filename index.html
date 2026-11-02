@@ -370,6 +370,17 @@ let lastRefresh = null;
 let busy = false;
 let climateNormals = null;
 
+async function loadClimateNormals(){
+  try{
+    const response = await fetch("./climate_normals.json");
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    climateNormals = await response.json();
+    console.log("NOAA climate normals loaded:", Object.keys(climateNormals).length, "regions");
+  }catch(error){
+    climateNormals = null;
+    console.warn("Climate normals unavailable:", error);
+  }
+}
 function loadRegions(){
  try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(Array.isArray(saved)&&saved.length) return saved; } catch(e){}
  return defaultRegions.map(x=>({...x}));
