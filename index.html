@@ -271,6 +271,80 @@ button:hover {
 h1, h2, h3 {
   letter-spacing: .025em;
 }
+/* METEOFOCUS HUD — ACTUAL DASHBOARD COMPONENTS */
+
+body {
+  background:
+    radial-gradient(ellipse at 50% 0%, #142b43 0%, #080d16 65%);
+  color: #e6eef8;
+}
+
+.header-module {
+  border-bottom: 1px solid #42d9ed;
+  padding-bottom: 20px;
+}
+
+.title-text {
+  color: #42d9ed;
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(66,217,237,.25);
+}
+
+.subtitle-text {
+  color: #8da3ba;
+}
+
+.status-badge {
+  color: #38d996;
+  border-color: #285b55;
+  background: #10251f;
+}
+
+.section-label {
+  color: #42d9ed;
+  letter-spacing: 2px;
+}
+
+.tile-card,
+.tile-card.updated {
+  background: linear-gradient(145deg,#142236,#0b1421);
+  border: 1px solid #29445e;
+  border-radius: 10px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.3);
+}
+
+.metric-chip {
+  background: linear-gradient(145deg,#172a40,#0c1726);
+  border: 1px solid #29445e;
+  border-radius: 9px;
+}
+
+.big-metric,
+.metric-value {
+  color: #e6eef8;
+}
+
+.metric-label,
+.tile-meta {
+  color: #8da3ba;
+}
+
+.log-box {
+  background: #0a1421;
+  border-color: #29445e;
+}
+
+.wiki-btn {
+  color: #42d9ed;
+  border-color: #29445e;
+  background: #101d2c;
+}
+
+.tile-card:hover,
+.metric-chip:hover {
+  border-color: #42d9ed;
+  transition: border-color .2s ease;
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
