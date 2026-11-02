@@ -554,6 +554,51 @@ function renderRegionSelect(){
  sel.innerHTML=regions.map(r=>`<option value="${safe(r.id)}">${safe(r.name)}</option>`).join("");
  if(regions.some(r=>r.id===previous))sel.value=previous;else{activeRegion=regions[0]?.id;sel.value=activeRegion;}
 }
+function renderWeatherMap(){
+ if(!window.L) return;
+
+ const mapElement=$("us-weather-map");
+ if(!mapElement) return;
+
+ if(!window.meteoMap){
+  window.meteoMap=L.map(mapElement).setView([39,-98],4);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   attribution:"&copy; OpenStreetMap contributors",
+   maxZoom:18
+  }).addTo(window.meteoMap);
+
+  window.meteoMapMarkers=L.layerGroup().addTo(window.meteoMap);
+ }
+
+ window.meteoMapMarkers.clearLayers();
+
+ regions.forEach(r=>{
+  const d=dataByRegion[r.id];
+  const o=d?.obs;
+  const p=d?.hourly?.[0];
+  const temp=o?.tempF??(p?periodF(p):null);
+  const wind=o?.windMph;
+
+  const popup=`
+   <div style="min-width:170px">
+    <strong>${safe(r.name)}</strong>
+    <hr>
+    Temperature: ${temp==null?"—":f(temp)+"°F"}<br>
+    CDD: ${f(d?.dd?.cdd)}<br>
+    HDD: ${f(d?.dd?.hdd)}<br>
+    Wind: ${wind==null?"—":f(wind)+" mph"}<br>
+    Weather: ${safe(o?.description||p?.shortForecast||"Unavailable")}
+   </div>
+  `;
+
+  L.marker([r.lat,r.lon])
+   .bindPopup(popup)
+   .addTo(window.meteoMapMarkers);
+ });
+
+ setTimeout(()=>window.meteoMap.invalidateSize(),100);
+}
 function renderTiles(){
  $("grid-container").innerHTML=regions.map(r=>{
   const d=dataByRegion[r.id], o=d?.obs, p=d?.hourly?.[0], temp=o?.tempF??(p?periodF(p):null);
@@ -668,7 +713,7 @@ async function refreshAll(){
   const records=regions.map(r=>dataByRegion[r.id]).filter(Boolean);
   const partial=records.some(d=>d.partial);
   lastRefresh=new Date();
-  renderTiles();renderRegionSelect();renderDetail();
+  renderTiles();renderWeatherMap();renderRegionSelect();renderDetail();
   if(status){
    if(failed.length===0&&!partial)status.textContent=`NOAA/NWS · ${regions.length} regions updated · ${lastRefresh.toLocaleString()} · Auto-refresh every 10 min`;
    else status.textContent=`NOAA/NWS · ${regions.length-failed.length}/${regions.length} regions returned data; some endpoints failed. Details are shown on each region tile.`;
