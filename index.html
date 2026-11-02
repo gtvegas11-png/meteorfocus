@@ -554,11 +554,29 @@ for (const station of stations.slice(0, 20)) {
  return groups;
 },{})).map(temps=>degreeDays(temps));
  const sevenDayDD=dailyDD.slice(0,7);
+  const dailyAnomalies=Object.entries(hourly.reduce((groups,p)=>{
+   const day=p.startTime?.slice(0,10);
+   if(!day)return groups;
+   if(!groups[day])groups[day]=[];
+   groups[day].push(p);
+   return groups;
+ },{})).map(([date,periods])=>{
+   const forecastAvgF=avg(periods.map(periodF));
+   const normalF=climateNormals?.[region.id]?.daily_avg_f?.[date.slice(5,10)]??null;
+   return {
+     date,
+     forecastAvgF,
+     normalF,
+     anomalyF:forecastAvgF!==null&&normalF!==null
+       ?Number((forecastAvgF-normalF).toFixed(1))
+       :null
+   };
+ });
  const errors=[];
  [["hourly forecast",hourlyR],["daily forecast",dailyR],["station list",stationsR],["alerts",alertsR],["grid data",gridR]].forEach(([label,result])=>{if(result.status==="rejected")errors.push(`${label}: ${result.reason?.message||result.reason}`);});
  if(stationError)errors.push(`latest station observation: ${stationError}`);
  const usable=hourly.length||daily.length||obs||stations.length||alertsR.status==="fulfilled"||grid;
- const record={region,hourly,daily,obs,stationName,alerts,dd,dailyDD,sevenDayDD,grid,
+ const record={region,hourly,daily,obs,stationName,alerts,dd,dailyDD,sevenDayDD,dailyAnomalies,grid,
    fetchedAt:new Date().toISOString(),forecastUpdated:hourlyR.status==="fulfilled"?(props(hourlyR.value).updateTime||null):null,
    stationCount:stations.length,pointOffice:pp.forecastOffice||null,errors,
    partial:errors.length>0,hasUsableData:!!usable,
