@@ -1082,6 +1082,7 @@ function updateCountyMapLayer(){
       if(selectedLayer === "temperature") value = daily.temp_f;
       if(selectedLayer === "hdd") value = daily.hdd;
       if(selectedLayer === "cdd") value = daily.cdd;
+      if(selectedLayer === "precipitation") value = daily.precip_mm;
     }
 
     if(value === null || value === undefined){
@@ -1098,11 +1099,16 @@ function updateCountyMapLayer(){
                   value < 55 ? "#42b8d5" :
                   value < 70 ? "#e2c65b" :
                   value < 85 ? "#ed9145" : "#d94d4d";
-    } else {
-      fillColor = value < 5 ? "#42d9ed" :
-                  value < 15 ? "#e2c65b" :
-                  value < 25 ? "#ed9145" : "#d94d4d";
-    }
+    } else if(selectedLayer === "precipitation"){
+  fillColor = value < 0.1 ? "#263747" :
+              value < 2.5 ? "#42d9ed" :
+              value < 10 ? "#e2c65b" :
+              value < 25 ? "#ed9145" : "#d94d4d";
+} else {
+  fillColor = value < 5 ? "#42d9ed" :
+              value < 15 ? "#e2c65b" :
+              value < 25 ? "#ed9145" : "#d94d4d";
+}
 
     return {
       fillColor,
