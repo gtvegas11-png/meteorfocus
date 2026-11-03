@@ -688,8 +688,11 @@ async function initializeCountyMap(){
 
   layer.bindTooltip(() => {
   const county = countyWeatherData?.counties?.[fips];
+  const boundaryName = feature.properties?.name;
 
-  return `${county?.county || "Unknown County"}, ${county?.state || ""}`;
+  return boundaryName
+    ? `${boundaryName}, FIPS ${fips}`
+    : `${county?.county || "County"}, ${county?.state || fips}`;
 });
 
   layer.on("click", () => {
