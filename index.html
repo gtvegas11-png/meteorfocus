@@ -1305,16 +1305,25 @@ function updateCountyMapLayer(){
   countyGeoLayer.setStyle(feature => {
     const fips = String(feature.id).padStart(5, "0");
 
-    const county = countyWeatherData.counties[fips];
-    const daily = county?.daily?.[countySelectedDate];
+   const county = countyWeatherData.counties[fips];
+const daily = county?.daily?.[countySelectedDate];
 
-    let value = null;
+const isHawaii = fips.startsWith("15");
 
-    if(daily){
-      if(selectedLayer === "temperature") value = daily.temp_f;
-      if(selectedLayer === "hdd") value = daily.hdd;
-      if(selectedLayer === "cdd") value = daily.cdd;
-      if(selectedLayer === "precipitation") value = daily.precip_mm;
+const hawaiiStation = remoteStationData?.stations?.hawaii;
+const hawaiiDaily = hawaiiStation?.daily?.[countySelectedDate];
+
+const weatherData = isHawaii && hawaiiDaily
+  ? hawaiiDaily
+  : daily;
+
+let value = null;
+
+    if(weatherData){
+      if(selectedLayer === "temperature") value = weatherData.temp_f;
+      if(selectedLayer === "hdd") value = weatherData.hdd;
+      if(selectedLayer === "cdd") value = weatherData.cdd;
+      if(selectedLayer === "precipitation") value = weatherData.precip_mm;
     }
 
     if(value === null || value === undefined){
