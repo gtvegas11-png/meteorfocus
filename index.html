@@ -803,12 +803,60 @@ function updateRemoteStationLayer(){
       return;
     }
 
-    historyElement.innerHTML = `
-      <div>Temperature: ${selected.temp_f ?? "—"}°F</div>
-      <div>HDD: ${selected.hdd ?? "—"}</div>
-      <div>CDD: ${selected.cdd ?? "—"}</div>
-      <div>Precipitation: ${selected.precip_mm ?? "—"} mm</div>
-    `;
+    const historyDates = Object.keys(station.daily)
+  .filter(day =>
+    day <= dateInput.value &&
+    station.daily[day]?.temp_f != null
+  )
+  .sort()
+  .slice(-30);
+
+const temperatures = historyDates.map(
+  day => station.daily[day].temp_f
+);
+
+const minTemp = Math.min(...temperatures);
+const maxTemp = Math.max(...temperatures);
+const range = maxTemp - minTemp || 1;
+
+const chartPoints = temperatures.map((temp, index) => {
+  const x = temperatures.length > 1
+    ? index * 300 / (temperatures.length - 1)
+    : 150;
+
+  const y = 80 - ((temp - minTemp) / range) * 65;
+
+  return `${x},${y}`;
+}).join(" ");
+
+historyElement.innerHTML = `
+  <div>Temperature: ${selected.temp_f ?? "—"}°F</div>
+  <div>HDD: ${selected.hdd ?? "—"}</div>
+  <div>CDD: ${selected.cdd ?? "—"}</div>
+  <div>Precipitation: ${selected.precip_mm ?? "—"} mm</div>
+
+  <hr>
+  <div style="color:#42d9ed;font-weight:700;">
+    30-DAY TEMPERATURE TREND
+  </div>
+
+  <svg viewBox="0 0 300 95"
+       width="100%"
+       style="margin-top:8px;">
+    <polyline
+      points="${chartPoints}"
+      fill="none"
+      stroke="#42d9ed"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+  </svg>
+
+  <div style="font-size:10px;color:#8da3ba;">
+    ${historyDates.length} daily observations · °F
+  </div>
+`;
   });
 });
       marker.addTo(remoteStationLayer);
