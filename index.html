@@ -894,6 +894,23 @@ const hddChartPoints = hddValues.map((value, index) => {
 
   return `${x},${y}`;
 }).join(" ");
+const cddValues = historyDates.map(
+  day => station.daily[day].cdd ?? 0
+);
+
+const minCDD = Math.min(...cddValues);
+const maxCDD = Math.max(...cddValues);
+const cddRange = maxCDD - minCDD || 1;
+
+const cddChartPoints = cddValues.map((value, index) => {
+  const x = cddValues.length > 1
+    ? index * 300 / (cddValues.length - 1)
+    : 150;
+
+  const y = 80 - ((value - minCDD) / cddRange) * 65;
+
+  return `${x},${y}`;
+}).join(" ");
 const minTemp = Math.min(...temperatures);
 const maxTemp = Math.max(...temperatures);
 const range = maxTemp - minTemp || 1;
@@ -949,8 +966,25 @@ historyElement.innerHTML = `
     />
   </svg>
 
+    <div style="color:#42d9ed;font-weight:700;margin-top:12px;">
+    30-DAY COOLING DEGREE DAY TREND
+  </div>
+
+  <svg viewBox="0 0 300 95"
+       width="100%"
+       style="margin-top:8px;">
+    <polyline
+      points="${cddChartPoints}"
+      fill="none"
+      stroke="#f0a44b"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+  </svg>
+
   <div style="font-size:10px;color:#8da3ba;">
-    ${historyDates.length} daily observations · HDD base 65°F
+    ${historyDates.length} daily observations · CDD base 65°F
   </div>
 `;
   });
