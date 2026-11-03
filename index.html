@@ -727,9 +727,16 @@ function updateRemoteStationLayer(){
   remoteStationLayer = L.layerGroup();
 
   const locations = {
-    alaska: [61.2163, -149.85724],
-    hawaii: [21.3245, -157.9251]
-  };
+  alaska: [61.2164, -149.8572],
+  fairbanks: [64.8553, -147.7217],
+  bethel: [60.7850, -161.8294],
+  nome: [64.5111, -165.4400],
+  kodiak: [57.7508, -152.4881],
+  sitka: [57.0575, -135.3267],
+  ketchikan: [55.3586, -131.7219],
+  utqiagvik: [71.2869, -156.7394],
+  hawaii: [21.3245, -157.9251]
+};
 
   Object.entries(remoteStationData.stations).forEach(
     ([region, station]) => {
