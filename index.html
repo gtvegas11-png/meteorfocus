@@ -779,6 +779,10 @@ function updateRemoteStationLayer(){
   <div>CDD: ${latest.cdd ?? "—"}</div>
   <div>Precipitation: ${latest.precip_mm ?? "—"} mm</div>
 </div>
+<div id="station-solar-${region}"
+     style="margin-top:12px;">
+  Loading sunrise and sunset...
+</div>
         </div>
       `);
       marker.on("popupopen", () => {
@@ -788,12 +792,71 @@ function updateRemoteStationLayer(){
 
   if(!dateInput) return;
 
-  dateInput.addEventListener("change", () => {
+  dateInput.addEventListener("change", async () => {
     const selected = station.daily[dateInput.value];
 
     const historyElement = document.getElementById(
       `station-history-${region}`
     );
+    const solarElement = document.getElementById(
+  `station-solar-${region}`
+);
+
+if(solarElement){
+  solarElement.textContent = "Loading solar conditions...";
+
+  try {
+    const url = new URL("https://api.sunrise-sunset.org/v2");
+
+    url.searchParams.set("lat", coords[0]);
+    url.searchParams.set("lng", coords[1]);
+    url.searchParams.set("date", dateInput.value);
+
+    const response = await fetch(url);
+
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const solar = await response.json();
+
+    if(solar.error) throw new Error(solar.message);
+
+    const formatTime = value =>
+      new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: solar.tzid
+      }).format(new Date(value));
+
+    const seconds = solar.day_length || 0;
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    solarElement.innerHTML = `
+      <hr>
+      <div style="color:#42d9ed;font-weight:700;">
+        SOLAR CONDITIONS
+      </div>
+      <div>Sunrise: ${formatTime(solar.sunrise)}</div>
+      <div>Sunset: ${formatTime(solar.sunset)}</div>
+      <div>Daylight: ${hours}h ${minutes}m</div>
+      <div style="font-size:10px;color:#8da3ba;">
+        ${solar.tzid} · Station coordinates
+      </div>
+      <div style="font-size:10px;margin-top:6px;">
+        Sun data by
+        <a href="https://sunrise-sunset.org/"
+           target="_blank"
+           rel="noopener"
+           style="color:#42d9ed;">
+          Sunrise-Sunset.org
+        </a>
+      </div>
+    `;
+  } catch(error) {
+    console.error("Station solar data failed:", error);
+    solarElement.textContent = "Solar data temporarily unavailable.";
+  }
+}
 
     if(!historyElement) return;
 
