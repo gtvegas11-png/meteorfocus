@@ -1070,27 +1070,46 @@ async function loadCountyWeatherData(){
 }
 function initializeCountyDateSelector(){
   const dateSelect = document.getElementById("county-map-date");
+  const layerSelect = document.getElementById("county-map-layer");
 
   if(!dateSelect || !countyWeatherData) return;
+
+  const selectedLayer = layerSelect.value;
+
+  const field = {
+    temperature: "temp_f",
+    hdd: "hdd",
+    cdd: "cdd",
+    precipitation: "precip_mm"
+  }[selectedLayer];
 
   const availableDates = new Set();
 
   Object.values(countyWeatherData.counties).forEach(county => {
-    Object.keys(county.daily || {}).forEach(day => {
-      availableDates.add(day);
+    Object.entries(county.daily || {}).forEach(([day, values]) => {
+      if(values[field] !== undefined && values[field] !== null){
+        availableDates.add(day);
+      }
     });
   });
 
+  const sortedDates = [...availableDates].sort();
+
   dateSelect.innerHTML = "";
 
-  [...availableDates].sort().forEach(day => {
+  sortedDates.forEach(day => {
     const option = document.createElement("option");
     option.value = day;
     option.textContent = day;
     dateSelect.appendChild(option);
   });
 
-  dateSelect.value = countySelectedDate;
+  if(sortedDates.includes(countySelectedDate)){
+    dateSelect.value = countySelectedDate;
+  } else {
+    countySelectedDate = sortedDates[sortedDates.length - 1] || "";
+    dateSelect.value = countySelectedDate;
+  }
 }
 function updateCountyMapLayer(){
   if(!countyGeoLayer || !countyWeatherData) return;
@@ -1145,7 +1164,10 @@ function updateCountyMapLayer(){
   });
 }
 document.getElementById("county-map-layer")
-  .addEventListener("change", updateCountyMapLayer);
+  .addEventListener("change", () => {
+    initializeCountyDateSelector();
+    updateCountyMapLayer();
+  });
 document.getElementById("county-map-date")
   .addEventListener("change", event => {
     countySelectedDate = event.target.value;
