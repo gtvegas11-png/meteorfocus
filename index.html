@@ -858,6 +858,7 @@ historyElement.innerHTML = `
   </div>
 `;
   });
+  dateInput.dispatchEvent(new Event("change"));
 });
       marker.addTo(remoteStationLayer);
     }
