@@ -411,7 +411,47 @@ body {
   <div class="tile-subdata" style="margin-top:12px;">
     COUNTY-LEVEL WEATHER DATA · UNITED STATES
   </div>
+<h2 class="section-label">ALASKA REGIONAL ENERGY SUMMARY</h2>
 
+<div class="tile-card" style="padding:16px;margin-bottom:24px;">
+
+  <div class="metric-label" style="margin-bottom:12px;">
+    NOAA ALASKA STATION NETWORK · 8 LOCATIONS
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+    <label class="metric-label" for="alaska-summary-date">
+      OBSERVATION DATE
+    </label>
+
+    <input type="date" id="alaska-summary-date"
+      style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;">
+  </div>
+
+  <div class="grid-layout">
+
+    <div class="tile-card">
+      <div class="metric-label">AVERAGE HEATING DEMAND</div>
+      <div class="big-metric" id="alaska-average-hdd">—</div>
+      <div class="tile-subdata">HDD · BASE 65°F</div>
+    </div>
+
+    <div class="tile-card">
+      <div class="metric-label">AVERAGE COOLING DEMAND</div>
+      <div class="big-metric" id="alaska-average-cdd">—</div>
+      <div class="tile-subdata">CDD · BASE 65°F</div>
+    </div>
+
+  </div>
+
+  <div class="tile-subdata" id="alaska-station-count"
+       style="margin:14px 0;">
+    WAITING FOR STATION DATA
+  </div>
+
+  <div id="alaska-station-breakdown"></div>
+
+</div>
 </div>
     <h2 class="section-label">U.S. WEATHER MONITORING MAP</h2>
 
@@ -716,7 +756,75 @@ async function initializeCountyMap(){
 /* METEOFOCUS REMOTE STATION MARKERS */
 
 let remoteStationLayer = null;
+/* METEOFOCUS ALASKA REGIONAL SUMMARY */
 
+function updateAlaskaSummary(){
+
+  if(!remoteStationData) return;
+
+  const dateInput = document.getElementById(
+    "alaska-summary-date"
+  );
+
+  if(!dateInput) return;
+
+  const alaskaStations = Object.entries(
+    remoteStationData.stations
+  ).filter(([region]) => region !== "hawaii");
+
+  if(!dateInput.value){
+    dateInput.value = alaskaStations
+      .map(([, station]) => station.latest_date)
+      .filter(Boolean)
+      .sort()
+      .pop() || "";
+  }
+
+  const date = dateInput.value;
+  const readings = [];
+
+  alaskaStations.forEach(([region, station]) => {
+    const daily = station.daily[date];
+
+    if(!daily) return;
+
+    readings.push({
+      name: station.name,
+      hdd: daily.hdd,
+      cdd: daily.cdd
+    });
+  });
+
+  const validHDD = readings
+    .map(item => item.hdd)
+    .filter(value => value != null);
+
+  const validCDD = readings
+    .map(item => item.cdd)
+    .filter(value => value != null);
+
+  const average = values => values.length
+    ? (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2)
+    : "—";
+
+  document.getElementById("alaska-average-hdd").textContent =
+    average(validHDD);
+
+  document.getElementById("alaska-average-cdd").textContent =
+    average(validCDD);
+
+  document.getElementById("alaska-station-count").textContent =
+    `${readings.length} OF 8 STATIONS REPORTING · ${date}`;
+
+  document.getElementById("alaska-station-breakdown").innerHTML =
+    readings.map(item => `
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:9px;border-bottom:1px solid #29445e;">
+        <strong>${item.name}</strong>
+        <span>HDD: ${item.hdd ?? "—"} · CDD: ${item.cdd ?? "—"}</span>
+      </div>
+    `).join("");
+
+}
 function updateRemoteStationLayer(){
   if(!countyMap || !remoteStationData) return;
 
@@ -1467,6 +1575,9 @@ console.log(
      initializeCountyDateSelector();
      updateCountyMapLayer();
      updateRemoteStationLayer();
+     updateAlaskaSummary();
+     document.getElementById("alaska-summary-date")
+  ?.addEventListener("change", updateAlaskaSummary);
     if(statusElement){
       statusElement.textContent =
         `${countyWeatherData.county_count.toLocaleString()} COUNTIES · OBSERVED THROUGH OCT 25, 2026 · PRELIMINARY`;
