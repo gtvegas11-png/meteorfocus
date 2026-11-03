@@ -761,15 +761,56 @@ function updateRemoteStationLayer(){
           </h3>
           <div><b>TYPE:</b> NOAA STATION OBSERVATION</div>
           <div><b>STATION:</b> ${station.station_id}</div>
-          <div><b>DATE:</b> ${station.latest_date}</div>
-          <hr>
-          <div>Temperature: ${latest.temp_f ?? "—"}°F</div>
-          <div>HDD: ${latest.hdd ?? "—"}</div>
-          <div>CDD: ${latest.cdd ?? "—"}</div>
-          <div>Precipitation: ${latest.precip_mm ?? "—"} mm</div>
+          <div style="margin:8px 0;">
+  <b>HISTORICAL DATE:</b>
+  <input
+    type="date"
+    id="station-date-${region}"
+    min="${Object.keys(station.daily).sort()[0]}"
+    max="${station.latest_date}"
+    value="${station.latest_date}"
+    style="display:block;margin-top:6px;padding:6px;"
+  >
+</div>
+<hr>
+<div id="station-history-${region}">
+  <div>Temperature: ${latest.temp_f ?? "—"}°F</div>
+  <div>HDD: ${latest.hdd ?? "—"}</div>
+  <div>CDD: ${latest.cdd ?? "—"}</div>
+  <div>Precipitation: ${latest.precip_mm ?? "—"} mm</div>
+</div>
         </div>
       `);
+      marker.on("popupopen", () => {
+  const dateInput = document.getElementById(
+    `station-date-${region}`
+  );
 
+  if(!dateInput) return;
+
+  dateInput.addEventListener("change", () => {
+    const selected = station.daily[dateInput.value];
+
+    const historyElement = document.getElementById(
+      `station-history-${region}`
+    );
+
+    if(!historyElement) return;
+
+    if(!selected){
+      historyElement.innerHTML =
+        "No observations available for this date.";
+      return;
+    }
+
+    historyElement.innerHTML = `
+      <div>Temperature: ${selected.temp_f ?? "—"}°F</div>
+      <div>HDD: ${selected.hdd ?? "—"}</div>
+      <div>CDD: ${selected.cdd ?? "—"}</div>
+      <div>Precipitation: ${selected.precip_mm ?? "—"} mm</div>
+    `;
+  });
+});
       marker.addTo(remoteStationLayer);
     }
   );
