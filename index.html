@@ -686,7 +686,11 @@ async function initializeCountyMap(){
       onEachFeature: (feature, layer) => {
   const fips = String(feature.id).padStart(5, "0");
 
-  layer.bindTooltip(`County FIPS: ${fips}`);
+  layer.bindTooltip(() => {
+  const county = countyWeatherData?.counties?.[fips];
+
+  return `${county?.county || "Unknown County"}, ${county?.state || ""}`;
+});
 
   layer.on("click", () => {
     showCountyDetails(fips, feature, layer);
