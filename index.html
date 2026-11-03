@@ -713,6 +713,62 @@ async function initializeCountyMap(){
     if(statusElement) statusElement.textContent = "COUNTY DATA UNAVAILABLE";
   }
 }
+/* METEOFOCUS REMOTE STATION MARKERS */
+
+let remoteStationLayer = null;
+
+function updateRemoteStationLayer(){
+  if(!countyMap || !remoteStationData) return;
+
+  if(remoteStationLayer){
+    countyMap.removeLayer(remoteStationLayer);
+  }
+
+  remoteStationLayer = L.layerGroup();
+
+  const locations = {
+    alaska: [61.2163, -149.85724],
+    hawaii: [21.3245, -157.9251]
+  };
+
+  Object.entries(remoteStationData.stations).forEach(
+    ([region, station]) => {
+      const coords = locations[region];
+      if(!coords) return;
+
+      const latest = station.daily[station.latest_date];
+      if(!latest) return;
+
+      const marker = L.circleMarker(coords, {
+        radius: 9,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: "#42d9ed",
+        fillOpacity: 1
+      });
+
+      marker.bindPopup(`
+        <div style="color:#e6eef8;background:#101a29;padding:10px;min-width:210px;">
+          <h3 style="color:#42d9ed;margin:0 0 8px;">
+            ${station.name}
+          </h3>
+          <div><b>TYPE:</b> NOAA STATION OBSERVATION</div>
+          <div><b>STATION:</b> ${station.station_id}</div>
+          <div><b>DATE:</b> ${station.latest_date}</div>
+          <hr>
+          <div>Temperature: ${latest.temp_f ?? "—"}°F</div>
+          <div>HDD: ${latest.hdd ?? "—"}</div>
+          <div>CDD: ${latest.cdd ?? "—"}</div>
+          <div>Precipitation: ${latest.precip_mm ?? "—"} mm</div>
+        </div>
+      `);
+
+      marker.addTo(remoteStationLayer);
+    }
+  );
+
+  remoteStationLayer.addTo(countyMap);
+}
 async function loadClimateNormals(){
   try{
     const response = await fetch("./climate_normals.json");
@@ -1147,6 +1203,7 @@ function exportCSV(){
 /* METEOFOCUS COUNTY OBSERVED DATA */
 
 let countyWeatherData = null;
+let remoteStationData = null;
 let countySelectedDate = "2026-10-25";
 
 async function loadCountyWeatherData(){
@@ -1166,10 +1223,23 @@ async function loadCountyWeatherData(){
     }
 
      countyWeatherData = await response.json();
+     const stationResponse = await fetch(
+  "./remote_station_observations.json"
+);
 
+if(!stationResponse.ok){
+  throw new Error(`Station data HTTP ${stationResponse.status}`);
+}
+
+remoteStationData = await stationResponse.json();
+
+console.log(
+  "NOAA remote station data loaded:",
+  Object.keys(remoteStationData.stations)
+);
      initializeCountyDateSelector();
      updateCountyMapLayer();
-
+     updateRemoteStationLayer();
     if(statusElement){
       statusElement.textContent =
         `${countyWeatherData.county_count.toLocaleString()} COUNTIES · OBSERVED THROUGH OCT 25, 2026 · PRELIMINARY`;
