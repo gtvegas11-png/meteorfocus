@@ -533,7 +533,110 @@ let climateNormals = null;
 
 let countyMap = null;
 let countyGeoLayer = null;
+/* METEOFOCUS COUNTY DETAILS */
 
+const solarDataCache = {};
+
+async function showCountyDetails(fips, feature, layer){
+  const county = countyWeatherData?.counties?.[fips];
+  const daily = county?.daily?.[countySelectedDate];
+
+  const center = layer.getBounds().getCenter();
+
+  layer.bindPopup(`
+    <div style="min-width:220px;color:#e6eef8;background:#101a29;padding:10px;border-radius:8px;">
+      <h3 style="color:#42d9ed;margin:0 0 10px;">
+        ${county?.county || "County"}, ${county?.state || ""}
+      </h3>
+      <div><b>DATE:</b> ${countySelectedDate}</div>
+      <hr>
+      <div>Temperature: ${daily?.temp_f ?? "—"}°F</div>
+      <div>HDD: ${daily?.hdd ?? "—"}</div>
+      <div>CDD: ${daily?.cdd ?? "—"}</div>
+      <div>Precipitation: ${daily?.precip_mm ?? "—"} mm</div>
+      <hr>
+      <div id="solar-${fips}">
+        Loading sunrise and sunset...
+      </div>
+    </div>
+  `).openPopup();
+
+  const cacheKey = `${fips}-${countySelectedDate}`;
+
+  try {
+    let solar = solarDataCache[cacheKey];
+
+    if(!solar){
+      const url = new URL("https://api.sunrise-sunset.org/v2");
+
+      url.searchParams.set("lat", center.lat);
+      url.searchParams.set("lng", center.lng);
+      url.searchParams.set("date", countySelectedDate);
+
+      const response = await fetch(url);
+
+      if(!response.ok){
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      solar = await response.json();
+
+      if(solar.error) throw new Error(solar.message);
+
+      solarDataCache[cacheKey] = solar;
+    }
+
+    const timeZone = solar.tzid;
+
+    const formatTime = value => {
+      if(!value) return "Unavailable";
+
+      return new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone
+      }).format(new Date(value));
+    };
+
+    const seconds = solar.day_length || 0;
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    const solarElement = document.getElementById(`solar-${fips}`);
+
+    if(solarElement){
+      solarElement.innerHTML = `
+        <div style="color:#42d9ed;font-weight:700;margin-bottom:8px;">
+          SOLAR CONDITIONS
+        </div>
+        <div>Sunrise: ${formatTime(solar.sunrise)}</div>
+        <div>Sunset: ${formatTime(solar.sunset)}</div>
+        <div>Daylight: ${hours}h ${minutes}m</div>
+        <div style="font-size:10px;color:#8da3ba;margin-top:6px;">
+          ${timeZone} · Approximate county center
+        </div>
+        <div style="font-size:10px;margin-top:6px;">
+          Sun data by
+          <a href="https://sunrise-sunset.org/"
+             target="_blank"
+             rel="noopener"
+             style="color:#42d9ed;">
+            Sunrise-Sunset.org
+          </a>
+        </div>
+      `;
+    }
+
+  } catch(error) {
+    console.error("Solar data failed:", error);
+
+    const solarElement = document.getElementById(`solar-${fips}`);
+
+    if(solarElement){
+      solarElement.textContent = "Solar data temporarily unavailable.";
+    }
+  }
+}
 async function initializeCountyMap(){
   const mapElement = document.getElementById("county-weather-map");
   const statusElement = document.getElementById("county-map-status");
@@ -581,9 +684,14 @@ async function initializeCountyMap(){
         fillOpacity: 0.35
       },
       onEachFeature: (feature, layer) => {
-        const fips = String(feature.id).padStart(5, "0");
-        layer.bindTooltip(`County FIPS: ${fips}`);
-      }
+  const fips = String(feature.id).padStart(5, "0");
+
+  layer.bindTooltip(`County FIPS: ${fips}`);
+
+  layer.on("click", () => {
+    showCountyDetails(fips, feature, layer);
+  });
+}
     }).addTo(countyMap);
 
     if(statusElement){
