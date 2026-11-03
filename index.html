@@ -877,7 +877,23 @@ if(solarElement){
 const temperatures = historyDates.map(
   day => station.daily[day].temp_f
 );
+const hddValues = historyDates.map(
+  day => station.daily[day].hdd ?? 0
+);
 
+const minHDD = Math.min(...hddValues);
+const maxHDD = Math.max(...hddValues);
+const hddRange = maxHDD - minHDD || 1;
+
+const hddChartPoints = hddValues.map((value, index) => {
+  const x = hddValues.length > 1
+    ? index * 300 / (hddValues.length - 1)
+    : 150;
+
+  const y = 80 - ((value - minHDD) / hddRange) * 65;
+
+  return `${x},${y}`;
+}).join(" ");
 const minTemp = Math.min(...temperatures);
 const maxTemp = Math.max(...temperatures);
 const range = maxTemp - minTemp || 1;
@@ -914,10 +930,27 @@ historyElement.innerHTML = `
       stroke-linejoin="round"
       stroke-linecap="round"
     />
+    </svg>
+
+  <div style="color:#42d9ed;font-weight:700;margin-top:12px;">
+    30-DAY HEATING DEGREE DAY TREND
+  </div>
+
+  <svg viewBox="0 0 300 95"
+       width="100%"
+       style="margin-top:8px;">
+    <polyline
+      points="${hddChartPoints}"
+      fill="none"
+      stroke="#f0a44b"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
   </svg>
 
   <div style="font-size:10px;color:#8da3ba;">
-    ${historyDates.length} daily observations · °F
+    ${historyDates.length} daily observations · HDD base 65°F
   </div>
 `;
   });
