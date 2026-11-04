@@ -1613,7 +1613,7 @@ async function loadCountyWeatherData(){
 
      const stationResponses = await Promise.all(
        stationFiles.map(file =>
-         fetch(`./station_data/${file}`)
+         fetch(`./${file}`)
        )
      );
 
