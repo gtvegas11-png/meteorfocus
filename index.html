@@ -874,10 +874,10 @@ function updateAlaskaSummary(){
 
 }
 function updateRemoteStationLayer(){
-  if(!countyMap || !remoteStationData) return;
+  if(!window.meteoMap || !remoteStationData) return;
 
   if(remoteStationLayer){
-    countyMap.removeLayer(remoteStationLayer);
+    window.meteoMap.removeLayer(remoteStationLayer);
   }
 
   remoteStationLayer = L.layerGroup();
@@ -1145,7 +1145,7 @@ historyElement.innerHTML = `
     }
   );
 
-  remoteStationLayer.addTo(countyMap);
+  remoteStationLayer.addTo(window.meteoMap);
 }
 async function loadClimateNormals(){
   try{
