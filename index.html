@@ -1601,15 +1601,41 @@ async function loadCountyWeatherData(){
     }
 
      countyWeatherData = await response.json();
-     const stationResponse = await fetch(
-  "./remote_station_observations.json"
-);
+     const stationFiles = [
+       "remote_station_observations_1.json",
+       "remote_station_observations_2.json",
+       "remote_station_observations_3.json",
+       "remote_station_observations_4.json",
+       "remote_station_observations_5.json",
+       "remote_station_observations_6.json",
+       "remote_station_observations_7.json"
+     ];
 
-if(!stationResponse.ok){
-  throw new Error(`Station data HTTP ${stationResponse.status}`);
-}
+     const stationResponses = await Promise.all(
+       stationFiles.map(file =>
+         fetch(`./station_data/${file}`)
+       )
+     );
 
-remoteStationData = await stationResponse.json();
+     for(const response of stationResponses){
+       if(!response.ok){
+         throw new Error(
+           `Station data HTTP ${response.status}`
+         );
+       }
+     }
+
+     const stationChunks = await Promise.all(
+       stationResponses.map(response => response.json())
+     );
+
+     remoteStationData = {
+       metadata: stationChunks[0].metadata,
+       stations: Object.assign(
+         {},
+         ...stationChunks.map(chunk => chunk.stations)
+       )
+     };
 
 console.log(
   "NOAA remote station data loaded:",
