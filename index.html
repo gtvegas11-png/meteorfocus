@@ -1414,6 +1414,9 @@ function renderWeatherMap(){
    .bindPopup(popup)
    .addTo(window.meteoMapMarkers);
  });
+ if(remoteStationData){
+   updateRemoteStationLayer();
+ }
 
  setTimeout(()=>window.meteoMap.invalidateSize(),100);
 }
