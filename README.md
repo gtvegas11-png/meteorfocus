@@ -1,48 +1,108 @@
-# 📊 MeteoFocus Alpha Engine: Institutional Commodity Weather Terminal
+# METEOFOCUS
+### Weather Intelligence for Energy Markets
 
-An automated alternative data pipeline designed for quantitative hedge funds, systematic energy desks, and agricultural commodity analysts. This platform skips slow, legacy weather maps by parsing raw, multi-dimensional NOAA GFS and ECMWF gridded binary arrays (GRIB2) directly at the server level, translating atmospheric drift into actionable financial load metrics.
+**An independent weather intelligence platform combining NOAA observations, U.S. county-level climate data, and regional weather analytics to examine weather patterns and their potential energy-market implications.**
 
----
-
-## 🟢 Live Platform Modules
-
-### 🖥️ [Launch the Interactive Terminal Dashboard](https://github.io)
-* Real-time WebSocket streaming panel displaying regional commodity grid projections.
-* Live tracking of Heating Degree Days (HDD) and Cooling Degree Days (CDD) deviations from 30-year climate norms.
-* Low-latency visual logging of structural weather model run flips.
-
-### 📚 [Explore the Technical Data Wiki](https://github.com)
-* Complete production-grade data engineering specifications.
-* Copy-pasteable Python scripts utilizing `xarray` and `cfgrib` to fetch and slice NOAA AWS S3 data blocks.
-* Detailed macroeconomic transmission breakdowns explaining weather's impact on front-month natural gas and power grid spot futures.
+🌐 **[LAUNCH THE LIVE METEOFOCUS DASHBOARD](https://gtvegas11-png.github.io/meteorfocus/)**
 
 ---
 
-## ⚙️ Core Architecture & Transmission Loop
+## Overview
 
-1. **Ingestion Loop:** Automated cron workers monitor NOAA's open-access AWS S3 buckets, downloading raw forecast models immediately upon operational release.
-2. **Quant Matrix Slicing:** A Python engine isolates the 2-meter surface temperature arrays and groups variables into specific trade hubs (e.g., ERCOT Houston Hub or PJM Northeast Grid).
-3. **Financial Asset Translation:** Thermodynamic readings are indexed against historical climate parameters to extract pure directional demand alpha (Anomalous Degree Day Shocks).
-4. **Signal Dispatch:** When an upcoming model run initialized cycle flips drastically from previous runs, a high-priority, cryptographically signed JSON webhook payload triggers automated systematic execution orders.
+MeteoFocus is a developing weather analytics platform focused on the intersection of meteorology, energy demand, and commodity markets.
+
+The project transforms publicly available weather information into accessible visual intelligence for exploring regional weather conditions, historical observations, and heating and cooling demand indicators.
+
+## Platform Features
+
+### 🇺🇸 National Weather Intelligence
+- National weather monitoring map
+- Regional weather observations
+- NOAA/NWS forecast integration
+- Weather conditions across multiple U.S. regions
+
+### 📍 County Weather Intelligence
+- 3,107 U.S. county records in the current preliminary dataset
+- Observed temperature mapping
+- Heating Degree Days (HDD)
+- Cooling Degree Days (CDD)
+- Precipitation observations
+- Interactive county-level geographic visualization
+
+### 🌡️ NOAA Station Network
+- 105 weather station records
+- Historical daily observations
+- Temperature, HDD, CDD, and precipitation
+- Historical date selection
+- Temperature and degree-day trend visualizations
+- Sunrise and sunset information
+
+### ⚡ Regional Energy Analytics
+- ERCOT
+- PJM
+- MISO
+- CAISO
+- NYISO
+- ISO-NE
+
+Regional weather information is organized around major U.S. energy-market areas to explore potential weather-driven demand implications.
+
+## Data Sources
+
+MeteoFocus uses publicly available meteorological information, including:
+
+- NOAA / National Weather Service
+- NOAA GHCN-Daily station observations
+- NOAA nClimGrid county-level climate observations
+- NOAA climate normals
+- Public geographic boundary datasets
+
+Individual datasets may have different observation periods and update schedules.
+
+## Heating and Cooling Degree Days
+
+MeteoFocus uses a 65°F reference temperature for its standard degree-day indicators.
+
+- **HDD:** Measures accumulated temperature below the 65°F reference.
+- **CDD:** Measures accumulated temperature above the 65°F reference.
+
+These indicators help describe weather-related heating and cooling demand patterns.
+
+## Technology
+
+- HTML
+- CSS
+- JavaScript
+- Leaflet
+- NOAA/NWS APIs
+- JSON weather datasets
+- Python-based weather data processing
+
+## Development Roadmap
+
+Planned areas of development include:
+
+- Expanded national county-level observations
+- Historical weather analytics
+- Temperature anomaly intelligence
+- GFS and ECMWF forecast model comparisons
+- Regional energy demand analytics
+- Expanded weather data visualization
+
+These capabilities are under development and are not necessarily available in the current live dashboard.
+
+## Project Status
+
+MeteoFocus is an independently developed, evolving weather intelligence project.
+
+Its objective is to make publicly available weather information more accessible for meteorological research, regional analysis, and energy-market exploration.
+
+**Live Dashboard:**  
+https://gtvegas11-png.github.io/meteorfocus/
+
+**Source Code:**  
+https://github.com/gtvegas11-png/meteorfocus
 
 ---
 
-## 🛠️ Quick Start for Quantitative Developers
-
-To test our data parsing framework locally on your machine, clone this repository and ensure your local Python environment has `numpy`, `pandas`, `xarray`, and the binary `cfgrib` engine installed.
-
-```python
-import xarray as xr
-
-# Open dataset filtering specifically for 2-meter surface temperature
-ds = xr.open_dataset("your_noaa_file.grib2", engine='cfgrib',
-backend_kwargs={'filter_by_keys': {'shortName': '2t', 'typeOfLevel': 'heightAboveGround'}})
-
-# Extract pinpoint spatial grid pixels nearest to target commodity hubs
-kelvin_val = ds['2t'].sel(latitude=30.05, longitude=-92.04, method='nearest').values.item()
-fahrenheit_temp = (kelvin_val - 273.15) * 9/5 + 32
-print(f"Calculated Hub Temperature: {fahrenheit_temp}°F")
-```
-
----
-*Disclaimer: For institutional testing and systematic execution backtesting purposes only. Raw endpoint webhook integrations require a premium enterprise data license framework contract.*
+*Weather Intelligence. Regional Insight. Better Data.*
