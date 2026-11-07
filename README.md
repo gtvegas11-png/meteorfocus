@@ -1,15 +1,15 @@
-# METEOFOCUS
+# METEORFOCUS
 ### Weather Intelligence for Energy Markets
 
 **An independent weather intelligence platform combining NOAA observations, U.S. county-level climate data, and regional weather analytics to examine weather patterns and their potential energy-market implications.**
 
-🌐 **[LAUNCH THE LIVE METEOFOCUS DASHBOARD](https://gtvegas11-png.github.io/meteorfocus/)**
+🌐 **[LAUNCH THE LIVE METEORFOCUS DASHBOARD](https://gtvegas11-png.github.io/meteorfocus/)**
 
 ---
 
 ## Overview
 
-MeteoFocus is a developing weather analytics platform focused on the intersection of meteorology, energy demand, and commodity markets.
+MeteorFocus is a developing weather analytics platform focused on the intersection of meteorology, energy demand, and commodity markets.
 
 The project transforms publicly available weather information into accessible visual intelligence for exploring regional weather conditions, historical observations, and heating and cooling demand indicators.
 
@@ -49,7 +49,7 @@ Regional weather information is organized around major U.S. energy-market areas 
 
 ## Data Sources
 
-MeteoFocus uses publicly available meteorological information, including:
+MeteorFocus uses publicly available meteorological information, including:
 
 - NOAA / National Weather Service
 - NOAA GHCN-Daily station observations
@@ -61,7 +61,7 @@ Individual datasets may have different observation periods and update schedules.
 
 ## Heating and Cooling Degree Days
 
-MeteoFocus uses a 65°F reference temperature for its standard degree-day indicators.
+MeteorFocus uses a 65°F reference temperature for its standard degree-day indicators.
 
 - **HDD:** Measures accumulated temperature below the 65°F reference.
 - **CDD:** Measures accumulated temperature above the 65°F reference.
@@ -93,7 +93,7 @@ These capabilities are under development and are not necessarily available in th
 
 ## Project Status
 
-MeteoFocus is an independently developed, evolving weather intelligence project.
+MeteorFocus is an independently developed, evolving weather intelligence project.
 
 Its objective is to make publicly available weather information more accessible for meteorological research, regional analysis, and energy-market exploration.
 
