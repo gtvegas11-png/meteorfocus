@@ -404,9 +404,8 @@ body {
 </head>
 <body>
 
-<div class="max-container">
-
-    <div class="header-module" id="overview">
+<div class="max-container" id="overview">
+    <div class="header-module">
         <div>
             <h1 class="title-text">MeteorFocus — NOAA Weather Intelligence for Energy Markets</h1>
             <p class="subtitle-text">
@@ -434,10 +433,11 @@ body {
     <a href="#county-intelligence">COUNTY INTELLIGENCE</a>
     <a href="#regional-energy">REGIONAL ENERGY</a>
     <a href="#national-map">STATION NETWORK</a>
-    <a href="#county-intelligence">HISTORICAL DATA</a>
+    <a href="#historical-data">HISTORICAL DATA</a>
 </nav>
       </div>
     <h2 id="county-intelligence" class="section-label">U.S. COUNTY WEATHER INTELLIGENCE</h2>
+<div id="historical-data"></div>
 <div class="tile-card" style="padding:16px;margin-bottom:24px;">
 
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
@@ -469,7 +469,7 @@ body {
   <div class="tile-subdata" style="margin-top:12px;">
     COUNTY-LEVEL WEATHER DATA · UNITED STATES
   </div>
-<h2 id="station-network" class="section-label">ALASKA REGIONAL ENERGY SUMMARY</h2>
+<h2 class="section-label">ALASKA REGIONAL ENERGY SUMMARY</h2>
 
 <div class="tile-card" style="padding:16px;margin-bottom:24px;">
 
@@ -512,7 +512,7 @@ body {
 </div>
 </div>
     <h2 id="national-map" class="section-label">U.S. WEATHER MONITORING MAP</h2>
-
+<div id="station-network"></div>
 <div class="tile-card" style="padding:12px;margin-bottom:24px;">
     <div id="us-weather-map"
          style="height:420px;width:100%;border-radius:6px;">
