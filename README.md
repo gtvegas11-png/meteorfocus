@@ -103,6 +103,11 @@ https://gtvegas11-png.github.io/meteorfocus/
 **Source Code:**  
 https://github.com/gtvegas11-png/meteorfocus
 
+## Project Links
+
+- 🌐 [Open MeteorFocus Dashboard](https://gtvegas11-png.github.io/meteorfocus/)
+- 📚 [MeteorFocus Wiki Documentation](https://github.com/gtvegas11-png/meteorfocus/wiki)
+- 💻 [GitHub Repository](https://github.com/gtvegas11-png/meteorfocus)
 ---
 
 *Weather Intelligence. Regional Insight. Better Data.*
