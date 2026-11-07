@@ -2,9 +2,11 @@
 ### Weather Intelligence for Energy Markets
 
 **An independent weather intelligence platform combining NOAA observations, U.S. county-level climate data, and regional weather analytics to examine weather patterns and their potential energy-market implications.**
+## Project Links
 
-🌐 **[LAUNCH THE LIVE METEORFOCUS DASHBOARD](https://gtvegas11-png.github.io/meteorfocus/)**
-
+- 🌐 [Open MeteorFocus Dashboard](https://gtvegas11-png.github.io/meteorfocus/)
+- 📚 [MeteorFocus Wiki Documentation](https://github.com/gtvegas11-png/meteorfocus/wiki)
+- 💻 [GitHub Repository](https://github.com/gtvegas11-png/meteorfocus)
 ---
 
 ## Overview
@@ -103,11 +105,7 @@ https://gtvegas11-png.github.io/meteorfocus/
 **Source Code:**  
 https://github.com/gtvegas11-png/meteorfocus
 
-## Project Links
 
-- 🌐 [Open MeteorFocus Dashboard](https://gtvegas11-png.github.io/meteorfocus/)
-- 📚 [MeteorFocus Wiki Documentation](https://github.com/gtvegas11-png/meteorfocus/wiki)
-- 💻 [GitHub Repository](https://github.com/gtvegas11-png/meteorfocus)
 ---
 
 *Weather Intelligence. Regional Insight. Better Data.*
