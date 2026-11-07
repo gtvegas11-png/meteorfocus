@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gtvegas11-png.github.io/meteorfocus/sitemap.xml
