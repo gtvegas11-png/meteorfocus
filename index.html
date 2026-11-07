@@ -465,7 +465,7 @@ body {
   <div id="county-weather-map"
     style="height:560px;width:100%;border-radius:7px;background:#0b1421;">
   </div>
-<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:12px;background:#101d2c;border:1px solid #29445e;border-radius:6px;">
+<div id="county-map-legend" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:12px;background:#101d2c;border:1px solid #29445e;border-radius:6px;">
 
   <strong style="color:#e6eef8;">COUNTY TEMPERATURE (°F)</strong>
 
@@ -1732,7 +1732,45 @@ function updateCountyMapLayer(){
 
   const selectedLayer =
     document.getElementById("county-map-layer").value;
+    const legend = document.getElementById("county-map-legend");
 
+  if(legend){
+    const legends = {
+      temperature: `
+        <strong>COUNTY TEMPERATURE (°F)</strong>
+        <span style="color:#3978c5;">■ Below 40°</span>
+        <span style="color:#42b8d5;">■ 40–54°</span>
+        <span style="color:#e2c65b;">■ 55–69°</span>
+        <span style="color:#ed9145;">■ 70–84°</span>
+        <span style="color:#d94d4d;">■ 85°+</span>
+      `,
+      hdd: `
+        <strong>HEATING DEGREE DAYS (HDD)</strong>
+        <span style="color:#42d9ed;">■ Below 5</span>
+        <span style="color:#e2c65b;">■ 5–14</span>
+        <span style="color:#ed9145;">■ 15–24</span>
+        <span style="color:#d94d4d;">■ 25+</span>
+      `,
+      cdd: `
+        <strong>COOLING DEGREE DAYS (CDD)</strong>
+        <span style="color:#42d9ed;">■ Below 5</span>
+        <span style="color:#e2c65b;">■ 5–14</span>
+        <span style="color:#ed9145;">■ 15–24</span>
+        <span style="color:#d94d4d;">■ 25+</span>
+      `,
+      precipitation: `
+        <strong>PRECIPITATION (mm)</strong>
+        <span style="color:#263747;">■ Below 0.1</span>
+        <span style="color:#42d9ed;">■ 0.1–2.49</span>
+        <span style="color:#e2c65b;">■ 2.5–9.99</span>
+        <span style="color:#ed9145;">■ 10–24.99</span>
+        <span style="color:#d94d4d;">■ 25+</span>
+      `
+    };
+
+    legend.innerHTML = legends[selectedLayer] || legends.temperature;
+  }
+    
   countyGeoLayer.setStyle(feature => {
     const fips = String(feature.id).padStart(5, "0");
 
