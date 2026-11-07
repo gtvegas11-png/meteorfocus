@@ -650,6 +650,12 @@ async function showCountyDetails(fips, feature, layer){
   const county = countyWeatherData?.counties?.[fips];
   const daily = county?.daily?.[countySelectedDate];
 
+  const isHawaii = fips.startsWith("15");
+  const hawaiiDaily = remoteStationData?.stations?.hawaii?.daily?.[countySelectedDate];
+
+  const weatherData = isHawaii && hawaiiDaily
+  ? hawaiiDaily
+  : daily;
   const center = layer.getBounds().getCenter();
 
   layer.bindPopup(`
@@ -659,10 +665,10 @@ async function showCountyDetails(fips, feature, layer){
       </h3>
       <div><b>DATE:</b> ${countySelectedDate}</div>
       <hr>
-      <div>Temperature: ${daily?.temp_f ?? "—"}°F</div>
-      <div>HDD: ${daily?.hdd ?? "—"}</div>
-      <div>CDD: ${daily?.cdd ?? "—"}</div>
-      <div>Precipitation: ${daily?.precip_mm ?? "—"} mm</div>
+      <div>Temperature: ${weatherData?.temp_f ?? "—"}°F</div>
+      <div>HDD: ${weatherData?.hdd ?? "—"}</div>
+      <div>CDD: ${weatherData?.cdd ?? "—"}</div>
+      <div>Precipitation: ${weatherData?.precip_mm ?? "—"} mm</div>
       <hr>
       <div id="solar-${fips}">
         Loading sunrise and sunset...
