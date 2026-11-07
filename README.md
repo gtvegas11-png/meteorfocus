@@ -1,7 +1,7 @@
 # METEORFOCUS
 ### Weather Intelligence for Energy Markets
 
-**An independent weather intelligence platform combining NOAA observations, U.S. county-level climate data, and regional weather analytics to examine weather patterns and their potential energy-market implications.**
+An independent weather intelligence dashboard combining NOAA observations, regional forecasts, historical station records, and county-level climate data. Explore Heating Degree Days (HDD), Cooling Degree Days (CDD), and weather patterns relevant to energy and commodity markets.
 ## Project Links
 
 - 🌐 [Open MeteorFocus Dashboard](https://gtvegas11-png.github.io/meteorfocus/)
