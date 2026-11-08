@@ -2153,6 +2153,45 @@ async function refreshAlaskaNaturalGas() {
     gasEl.textContent = "EIA UNAVAILABLE";
   }
 }
+async function refreshAlaskaCrudeOil() {
+  const oilEl = document.getElementById("market-alaska-oil");
+
+  if (!oilEl) return;
+
+  try {
+    const response = await fetch(
+      "https://meteofocus-gfs-api.onrender.com/api/v1/alaska/crude-oil",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("EIA API HTTP " + response.status);
+    }
+
+    const data = await response.json();
+    const value = Number(data.value);
+
+    if (!Number.isFinite(value)) {
+      throw new Error("Invalid EIA crude oil value");
+    }
+
+    oilEl.textContent = value.toLocaleString("en-US");
+
+    const sub = oilEl.parentElement?.querySelector(".tile-subdata");
+
+    if (sub) {
+      sub.textContent =
+        "EIA CRUDE OIL PRODUCTION · " +
+        data.period + " · " + data.unit;
+    }
+
+    console.log("Alaska EIA crude oil updated", data);
+
+  } catch (error) {
+    console.error("Alaska EIA crude oil error:", error);
+    oilEl.textContent = "EIA UNAVAILABLE";
+  }
+}
 function addRegion(){
  const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
  if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat>90||lon < -180||lon>180||!/^[A-Z]{2}$/.test(state)){alert("Enter a region name, valid latitude/longitude, and two-letter US state code.");return;}
@@ -2417,6 +2456,7 @@ $("region-count").textContent=regions.length;
 refreshAll();
 refreshGfsMarketIndicators();
 refreshAlaskaNaturalGas();
+refreshAlaskaCrudeOil();
 setInterval(refreshAll,REFRESH_MS);
 setInterval(refreshGfsMarketIndicators, 30 * 60 * 1000);
 </script>
