@@ -907,7 +907,44 @@ function updateAlaskaBoroughMap(){
     document.getElementById("alaska-borough-layer").value;
 
   alaskaBoroughLayer.setStyle(feature => {
+   const legend = document.getElementById("alaska-borough-legend");
 
+  const legends = {
+    temperature: `
+      <strong>TEMPERATURE (°F)</strong>
+      <span style="color:#3978c5">■ Below 20°</span>
+      <span style="color:#42b8d5">■ 20–35°</span>
+      <span style="color:#e2c65b">■ 35–50°</span>
+      <span style="color:#ed9145">■ 50–65°</span>
+      <span style="color:#d94d4d">■ Above 65°</span>
+    `,
+    hdd: `
+      <strong>HEATING DEGREE DAYS</strong>
+      <span style="color:#42d9ed">■ 0–5</span>
+      <span style="color:#e2c65b">■ 5–15</span>
+      <span style="color:#ed9145">■ 15–25</span>
+      <span style="color:#d94d4d">■ Above 25</span>
+    `,
+    cdd: `
+      <strong>COOLING DEGREE DAYS</strong>
+      <span style="color:#42d9ed">■ 0–5</span>
+      <span style="color:#e2c65b">■ 5–15</span>
+      <span style="color:#ed9145">■ 15–25</span>
+      <span style="color:#d94d4d">■ Above 25</span>
+    `,
+    precipitation: `
+      <strong>PRECIPITATION (mm)</strong>
+      <span style="color:#263747">■ Below 0.1</span>
+      <span style="color:#42d9ed">■ 0.1–2.5</span>
+      <span style="color:#e2c65b">■ 2.5–10</span>
+      <span style="color:#ed9145">■ 10–25</span>
+      <span style="color:#d94d4d">■ Above 25</span>
+    `
+  };
+
+  if(legend){
+    legend.innerHTML = legends[selectedLayer];
+  } 
     const geoid = String(feature.properties.GEOID).padStart(5, "0");
 
     const borough = alaskaBoroughData.boroughs.find(
