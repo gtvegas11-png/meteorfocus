@@ -2030,6 +2030,8 @@ async function refreshGfsMarketIndicators() {
   const hddEl = document.getElementById("market-national-hdd");
   const cddEl = document.getElementById("market-national-cdd");
   const signalEl = document.getElementById("market-demand-signal");
+  const alaskaHddEl = document.getElementById("market-alaska-hdd");
+  const alaskaCddEl = document.getElementById("market-alaska-cdd");
 
   try {
     const response = await fetch(
@@ -2042,6 +2044,30 @@ async function refreshGfsMarketIndicators() {
     }
 
     const data = await response.json();
+    const alaskaDays = data.regions?.["Alaska"]?.daily;
+
+if (alaskaDays && alaskaDays.length) {
+  const alaskaDay = [...alaskaDays].sort(
+    (a, b) => b.samples - a.samples
+  )[0];
+
+  const alaskaHdd = Number(alaskaDay.HDD);
+  const alaskaCdd = Number(alaskaDay.CDD);
+
+  if (Number.isFinite(alaskaHdd) && Number.isFinite(alaskaCdd)) {
+    if (alaskaHddEl) alaskaHddEl.textContent = alaskaHdd.toFixed(1);
+    if (alaskaCddEl) alaskaCddEl.textContent = alaskaCdd.toFixed(1);
+
+    const alaskaNote =
+      "ALASKA GFS PROXY · " + alaskaDay.date_utc +
+      " · " + alaskaDay.samples + " SAMPLES";
+
+    [alaskaHddEl, alaskaCddEl].forEach(el => {
+      const sub = el?.parentElement?.querySelector(".tile-subdata");
+      if (sub) sub.textContent = alaskaNote;
+    });
+  }
+}
     const days = data.contiguous_us_proxy?.daily;
 
     if (!days || !days.length) {
@@ -2080,6 +2106,7 @@ async function refreshGfsMarketIndicators() {
     });
 
     console.log("MeteoFocus GFS indicators updated", day);
+    console.log("MeteoFocus Alaska GFS indicators updated");
 
   } catch (error) {
     console.error("GFS Market Intelligence error:", error);
