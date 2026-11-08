@@ -480,6 +480,43 @@ body {
   <div class="tile-subdata" style="margin-top:12px;">
     COUNTY-LEVEL WEATHER DATA · UNITED STATES
   </div>
+<h2 class="section-label">ALASKA BOROUGH WEATHER INTELLIGENCE</h2>
+
+<div class="tile-card" style="padding:16px;margin-bottom:24px;">
+
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+
+    <span class="metric-label">MAP DATA LAYER</span>
+
+    <select id="alaska-borough-layer"
+      style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;font-family:inherit;">
+      <option value="temperature">Temperature</option>
+      <option value="hdd">Heating Degree Days</option>
+      <option value="cdd">Cooling Degree Days</option>
+      <option value="precipitation">Precipitation</option>
+    </select>
+
+    <span class="metric-label">OBSERVATION DATE</span>
+
+    <select id="alaska-borough-date"
+      style="background:#101d2c;color:#e6eef8;border:1px solid #29445e;padding:9px;border-radius:5px;font-family:inherit;">
+    </select>
+
+    <span id="alaska-borough-status" class="tile-subdata">
+      ALASKA DATA INITIALIZING
+    </span>
+
+  </div>
+
+  <div id="alaska-borough-map"
+    style="height:520px;width:100%;border-radius:7px;background:#0b1421;">
+  </div>
+
+  <div class="tile-subdata" style="margin-top:12px;">
+    NOAA CPC DAILY GRIDDED ESTIMATES · 30 ALASKA BOROUGHS AND CENSUS AREAS · OCTOBER 2026
+  </div>
+
+</div>
 <h2 class="section-label">ALASKA REGIONAL ENERGY SUMMARY</h2>
 
 <div class="tile-card" style="padding:16px;margin-bottom:24px;">
@@ -827,6 +864,245 @@ async function initializeCountyMap(){
     console.error("County map failed:", error);
     if(statusElement) statusElement.textContent = "COUNTY DATA UNAVAILABLE";
   }
+}
+/* METEOFOCUS ALASKA BOROUGH WEATHER MAP */
+
+let alaskaBoroughMap = null;
+let alaskaBoroughLayer = null;
+let alaskaBoroughData = null;
+let alaskaSelectedDate = "2026-10-31";
+
+function alaskaWeatherColor(value, layer){
+
+  if(value === null || value === undefined){
+    return "#263747";
+  }
+
+  if(layer === "temperature"){
+    return value < 20 ? "#3978c5" :
+           value < 35 ? "#42b8d5" :
+           value < 50 ? "#e2c65b" :
+           value < 65 ? "#ed9145" : "#d94d4d";
+  }
+
+  if(layer === "precipitation"){
+    return value < 0.1 ? "#263747" :
+           value < 2.5 ? "#42d9ed" :
+           value < 10 ? "#e2c65b" :
+           value < 25 ? "#ed9145" : "#d94d4d";
+  }
+
+  return value < 5 ? "#42d9ed" :
+         value < 15 ? "#e2c65b" :
+         value < 25 ? "#ed9145" : "#d94d4d";
+}
+
+function updateAlaskaBoroughMap(){
+
+  if(!alaskaBoroughLayer || !alaskaBoroughData) return;
+
+  const selectedLayer =
+    document.getElementById("alaska-borough-layer").value;
+
+  alaskaBoroughLayer.setStyle(feature => {
+
+    const geoid = String(feature.properties.GEOID).padStart(5, "0");
+
+    const borough = alaskaBoroughData.boroughs.find(
+      item => item.geoid === geoid
+    );
+
+    const daily = borough?.daily?.find(
+      item => item.date === alaskaSelectedDate
+    );
+
+    let value = null;
+
+    if(daily){
+      if(selectedLayer === "temperature") value = daily.temp_f;
+      if(selectedLayer === "hdd") value = daily.hdd;
+      if(selectedLayer === "cdd") value = daily.cdd;
+      if(selectedLayer === "precipitation") value = daily.precip_mm;
+    }
+
+    return {
+      color: "#8da3ba",
+      weight: 1,
+      fillColor: alaskaWeatherColor(value, selectedLayer),
+      fillOpacity: value == null ? 0.25 : 0.75
+    };
+  });
+}
+
+async function initializeAlaskaBoroughMap(){
+
+  const status = document.getElementById("alaska-borough-status");
+
+  try {
+
+    status.textContent = "LOADING ALASKA DATA";
+
+    const [weatherResponse, boundaryResponse] = await Promise.all([
+
+      fetch("./alaska_borough_observed_october_2026.json"),
+
+      fetch(
+        "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/23/query?where=STATE%3D%2702%27&outFields=GEOID,NAME,BASENAME&returnGeometry=true&outSR=4326&f=geojson"
+      )
+
+    ]);
+
+    if(!weatherResponse.ok){
+      throw new Error("Alaska weather JSON unavailable");
+    }
+
+    if(!boundaryResponse.ok){
+      throw new Error("Alaska boundary data unavailable");
+    }
+
+    alaskaBoroughData = await weatherResponse.json();
+
+    const boundaries = await boundaryResponse.json();
+
+    const dateSelect =
+      document.getElementById("alaska-borough-date");
+
+    const layerSelect =
+      document.getElementById("alaska-borough-layer");
+
+    const dates = alaskaBoroughData.boroughs[0].daily.map(
+      item => item.date
+    );
+
+    dateSelect.innerHTML = "";
+
+    dates.forEach(date => {
+
+      const option = document.createElement("option");
+
+      option.value = date;
+      option.textContent = date;
+
+      dateSelect.appendChild(option);
+
+    });
+
+    alaskaSelectedDate = dates[dates.length - 1];
+    dateSelect.value = alaskaSelectedDate;
+
+    alaskaBoroughMap = L.map("alaska-borough-map", {
+      minZoom: 2,
+      maxZoom: 9
+    });
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: 18
+      }
+    ).addTo(alaskaBoroughMap);
+
+    alaskaBoroughLayer = L.geoJSON(boundaries, {
+
+      style: {
+        color: "#8da3ba",
+        weight: 1,
+        fillColor: "#263747",
+        fillOpacity: 0.6
+      },
+
+      onEachFeature: (feature, layer) => {
+
+        const geoid = String(
+          feature.properties.GEOID
+        ).padStart(5, "0");
+
+        const borough = alaskaBoroughData.boroughs.find(
+          item => item.geoid === geoid
+        );
+
+        layer.bindTooltip(
+          borough?.name || feature.properties.NAME
+        );
+
+        layer.on("click", () => {
+
+          const daily = borough?.daily?.find(
+            item => item.date === alaskaSelectedDate
+          );
+
+          if(!daily) return;
+
+          layer.bindPopup(`
+            <div style="background:#101a29;color:#e6eef8;padding:12px;min-width:220px;">
+
+              <h3 style="color:#42d9ed;margin-top:0;">
+                ${borough.name}
+              </h3>
+
+              <div><b>DATE:</b> ${daily.date}</div>
+              <hr>
+
+              <div>Temperature: ${daily.temp_f ?? "—"} °F</div>
+              <div>HDD: ${daily.hdd ?? "—"}</div>
+              <div>CDD: ${daily.cdd ?? "—"}</div>
+              <div>Precipitation: ${daily.precip_mm ?? "—"} mm</div>
+
+              <hr>
+
+              <div><b>TEMPERATURE COVERAGE:</b>
+                ${daily.temp_coverage_pct}% · ${daily.temp_coverage_quality}
+              </div>
+
+              <div><b>PRECIPITATION COVERAGE:</b>
+                ${daily.precip_coverage_pct}% · ${daily.precip_coverage_quality}
+              </div>
+
+              <div style="font-size:10px;color:#8da3ba;margin-top:10px;">
+                NOAA CPC gridded estimates · 0.5° grid
+              </div>
+
+            </div>
+          `).openPopup();
+
+        });
+
+      }
+
+    }).addTo(alaskaBoroughMap);
+
+    alaskaBoroughMap.fitBounds(
+      alaskaBoroughLayer.getBounds(),
+      { padding: [15, 15] }
+    );
+
+    updateAlaskaBoroughMap();
+
+    layerSelect.addEventListener(
+      "change",
+      updateAlaskaBoroughMap
+    );
+
+    dateSelect.addEventListener("change", () => {
+
+      alaskaSelectedDate = dateSelect.value;
+
+      updateAlaskaBoroughMap();
+
+    });
+
+    status.textContent =
+      `${boundaries.features.length} ALASKA AREAS · NOAA CPC DATA LOADED`;
+
+  } catch(error) {
+
+    console.error("Alaska borough map failed:", error);
+
+    status.textContent = "ALASKA MAP DATA UNAVAILABLE";
+
+  }
+
 }
 /* METEOFOCUS REMOTE STATION MARKERS */
 
@@ -1850,6 +2126,7 @@ $("clear-history-btn")?.addEventListener("click",()=>{if(confirm("Clear saved fo
 window.addEventListener("load", async () => {
   await initializeCountyMap();
   await loadCountyWeatherData();
+  await initializeAlaskaBoroughMap();
 });
 loadClimateNormals();
 renderRegionSelect();
