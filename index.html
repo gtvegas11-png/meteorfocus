@@ -2215,6 +2215,39 @@ async function refreshAlaskaElectricity() {
     console.error("Alaska electricity:", error);
   }
 }
+
+async function refreshAlaskaRenewables() {
+  const el = document.getElementById("market-alaska-renewables");
+
+  try {
+    const response = await fetch(
+      "https://meteofocus-gfs-api.onrender.com/api/v1/alaska/renewable-generation"
+    );
+
+    if (!response.ok) throw new Error("EIA renewable request failed");
+
+    const result = await response.json();
+
+    if (result.status !== "ok") throw new Error("Invalid EIA response");
+
+    const renewable = result.data.find(
+      row => row.fueltypeid === "REN"
+    );
+
+    if (!renewable || renewable.generation == null) {
+      throw new Error("Renewable generation unavailable");
+    }
+
+    el.textContent = Number(renewable.generation).toFixed(1);
+
+    el.title =
+      `EIA renewable electricity generation · ${renewable.period} · thousand MWh`;
+  } catch (error) {
+    el.textContent = "UNAVAILABLE";
+    console.error("Alaska renewables:", error);
+  }
+}
+
 function addRegion(){
  const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
  if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat>90||lon < -180||lon>180||!/^[A-Z]{2}$/.test(state)){alert("Enter a region name, valid latitude/longitude, and two-letter US state code.");return;}
@@ -2481,6 +2514,7 @@ refreshGfsMarketIndicators();
 refreshAlaskaNaturalGas();
 refreshAlaskaCrudeOil();
 refreshAlaskaElectricity();
+refreshAlaskaRenewables();
 setInterval(refreshAll,REFRESH_MS);
 setInterval(refreshGfsMarketIndicators, 30 * 60 * 1000);
 </script>
