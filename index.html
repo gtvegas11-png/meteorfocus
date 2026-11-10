@@ -688,6 +688,31 @@ body {
         14 NATIONAL MONITORING LOCATIONS · NOAA/NWS
     </div>
 </div>
+<h2 class="section-label">ALASKA WEATHER-DRIVEN ENERGY FORECAST</h2>
+
+<div class="tile-card" style="padding:16px;margin-bottom:24px;">
+
+  <div class="metric-label" style="margin-bottom:8px;">
+    NOAA GFS · 6-HOUR FORECAST INTERVALS · 65°F BASE
+  </div>
+
+  <div id="alaska-forecast-status" class="metric-label">
+    LOADING ALASKA FORECAST...
+  </div>
+
+  <div id="alaska-forecast-model" class="metric-label" style="margin:8px 0 16px;">
+    MODEL RUN: WAITING FOR DATA
+  </div>
+
+  <div id="alaska-forecast-daily">
+    <div class="metric-label">Forecast data will appear here.</div>
+  </div>
+
+  <div class="metric-label" style="margin-top:14px;">
+    WEATHER-DERIVED INDICATORS · NOT EIA ENERGY ACTUALS OR PRICE FORECASTS
+  </div>
+
+</div>
     <h2 class="section-label">
         Active Hub Asset Projections
     </h2>
@@ -2247,6 +2272,72 @@ async function refreshAlaskaRenewables() {
     console.error("Alaska renewables:", error);
   }
 }
+async function refreshAlaskaForecast() {
+  const status = document.getElementById("alaska-forecast-status");
+  const model = document.getElementById("alaska-forecast-model");
+  const daily = document.getElementById("alaska-forecast-daily");
+
+  try {
+    status.textContent = "LOADING ALASKA FORECAST...";
+
+    const response = await fetch(
+      "https://meteofocus-gfs-api.onrender.com/api/v1/alaska/forecast"
+    );
+
+    if (!response.ok) {
+      throw new Error("GFS forecast request failed");
+    }
+
+    const result = await response.json();
+
+    if (result.status !== "ok" || !Array.isArray(result.daily)) {
+      throw new Error("Invalid GFS forecast response");
+    }
+
+    status.textContent =
+      `NOAA GFS FORECAST CONNECTED · ${result.daily.length} DAILY ENTRIES`;
+
+    model.textContent =
+      `MODEL RUN: ${result.model_run_utc} · ${result.source_info}`;
+
+    daily.innerHTML = result.daily.map(day => {
+      const completeness = day.complete_day ? "COMPLETE" : "PARTIAL";
+
+      return `
+        <div style="
+          display:grid;
+          grid-template-columns:1.2fr 1fr 1fr 1fr;
+          gap:8px;
+          padding:12px 8px;
+          border-bottom:1px solid rgba(255,255,255,0.12);
+          font-size:12px;
+        ">
+          <div>
+            <strong>${day.date_utc}</strong>
+            <div class="metric-label">${completeness}</div>
+          </div>
+          <div>
+            <div class="metric-label">TEMP °F</div>
+            ${Number(day.mean_temp_f).toFixed(1)}
+          </div>
+          <div>
+            <div class="metric-label">HDD</div>
+            ${Number(day.HDD).toFixed(1)}
+          </div>
+          <div>
+            <div class="metric-label">CDD</div>
+            ${Number(day.CDD).toFixed(1)}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    status.textContent = "FORECAST UNAVAILABLE";
+    daily.textContent = "NO GFS FORECAST DATA AVAILABLE";
+    console.error("Alaska GFS forecast:", error);
+  }
+}
 
 function addRegion(){
  const name=$("region-name").value.trim(),lat=Number($("region-lat").value),lon=Number($("region-lon").value),state=$("region-state").value.trim().toUpperCase();
@@ -2515,6 +2606,7 @@ refreshAlaskaNaturalGas();
 refreshAlaskaCrudeOil();
 refreshAlaskaElectricity();
 refreshAlaskaRenewables();
+refreshAlaskaForecast();
 setInterval(refreshAll,REFRESH_MS);
 setInterval(refreshGfsMarketIndicators, 30 * 60 * 1000);
 </script>
